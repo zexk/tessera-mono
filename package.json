@@ -1,0 +1,23 @@
+{
+  "name": "tessera-mono",
+  "version": "0.1.0-draft",
+  "description": "A neoretro bitmap monospace font — 8×16 px cell, designed to carry the full Nerd Fonts glyphset",
+  "license": "SIL OFL 1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check-glyphs.mjs",
+    "build:font": "npm run check && node scripts/build-font.mjs",
+    "build:otb": "npm run check && for s in 1 2 3; do node scripts/build-bdf.mjs --scale $s --output dist/TesseraMono-${s}x.bdf && fonttosfnt -o dist/TesseraMono-${s}x.otb dist/TesseraMono-${s}x.bdf; done",
+    "edit:bdf": "otf2bdf -p 16 -r 72 -o dist/TesseraMono-edit.bdf dist/TesseraMono-Regular.ttf",
+    "edit:import": "node scripts/bdf2js.mjs --input dist/TesseraMono-edit.bdf",
+    "edit": "npm run build:font && npm run edit:bdf && gbdfed dist/TesseraMono-edit.bdf && npm run edit:import && npm run build:font",
+    "dev": "npx serve .",
+    "dev:vite": "npx vite"
+  },
+  "devDependencies": {
+    "opentype.js": "^1.3.4",
+    "serve": "^14.2.4",
+    "vite": "^6.3.5"
+  }
+}

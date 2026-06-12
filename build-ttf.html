@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tessera Mono — TTF builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0b0b0b; --panel: #161616; --ink: #ededed;
+    --muted: #6e6e6e; --rule: #2a2a2a; --accent: #f5f5f5;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.55 ui-sans-serif, -apple-system, "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 920px; margin: 0 auto; padding: 56px 48px 96px; }
+
+  .hd { display: flex; align-items: baseline; gap: 14px; padding-bottom: 28px;
+    border-bottom: 1px solid var(--rule); margin-bottom: 32px;
+  }
+  .hd .num { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .04em; }
+  .hd h1 { margin: 0; font-size: 28px; font-weight: 500; letter-spacing: -0.01em; }
+  .hd .back { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); text-decoration: none; }
+  .hd .back:hover { color: var(--ink); }
+
+  .blurb { color: var(--muted); max-width: 640px; text-wrap: pretty; margin: 0 0 32px; }
+  .blurb code { font-family: var(--mono); color: var(--ink); background: var(--panel); padding: 1px 5px; }
+
+  /* Action row */
+  .actions { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .btn { font-family: var(--mono); font-size: 12px; padding: 10px 18px;
+    background: var(--ink); color: var(--bg); border: none; cursor: pointer;
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .btn:hover { background: var(--accent); }
+  .btn[disabled] { background: var(--rule); color: var(--muted); cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+  .btn-ghost:hover { border-color: var(--ink); background: transparent; color: var(--ink); }
+  .status { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .status.go { color: var(--accent); }
+
+  /* Build log */
+  .log { font-family: var(--mono); font-size: 11px; line-height: 1.7;
+    background: var(--panel); border: 1px solid var(--rule); padding: 14px 18px;
+    margin-bottom: 24px; min-height: 80px; max-height: 260px; overflow: auto;
+    white-space: pre;
+  }
+  .log .ok { color: #8ad08a; }
+  .log .skip { color: var(--muted); }
+  .log .head { color: var(--accent); }
+
+  /* Stats grid */
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+    margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--rule);
+  }
+  .stats div { display: flex; flex-direction: column; gap: 2px;
+    padding-top: 8px; border-top: 1px solid var(--rule);
+  }
+  .stats b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  .stats span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+  /* Preview */
+  .sec-title { font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; margin: 28px 0 12px; color: var(--ink);
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .sec-title span { color: var(--muted); font-weight: 400; }
+  .preview { background: var(--panel); border: 1px solid var(--rule); padding: 28px;
+    font-family: 'TesseraMonoBuilt', var(--mono); font-size: 22px; line-height: 1.4;
+    white-space: pre; overflow: auto; color: var(--ink);
+    -webkit-font-smoothing: none; font-smooth: never;
+    image-rendering: pixelated;
+  }
+  .preview.small { font-size: 14px; line-height: 1.45; }
+  .preview.big   { font-size: 36px; line-height: 1.3; }
+
+  textarea.live { width: 100%; min-height: 80px; padding: 14px;
+    border: 1px solid var(--rule); background: var(--bg); color: var(--ink);
+    font-family: var(--mono); font-size: 12px; resize: vertical; outline: none;
+    margin-top: 10px;
+  }
+  textarea.live:focus { border-color: var(--accent); }
+
+  details { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--rule); }
+  details summary { cursor: pointer; font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+  }
+  details summary:hover { color: var(--ink); }
+  details pre { background: var(--panel); border: 1px solid var(--rule);
+    padding: 14px; font-family: var(--mono); font-size: 11px; line-height: 1.65;
+    overflow: auto; margin-top: 14px;
+  }
+
+  .note { font-family: var(--mono); font-size: 10px; color: var(--muted);
+    line-height: 1.6; margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hd">
+    <span class="num">§T</span>
+    <h1>Build · TTF</h1>
+    <a class="back" href="index.html">← back to specimen</a>
+  </div>
+
+  <p class="blurb">
+    Trace every 8 × 16 bitmap from <code>glyphs.js</code> + <code>icons.js</code> as
+    one straight-line contour per filled pixel and assemble a TrueType font in your
+    browser. Embeds <code>Basic Latin</code>, Latin-1 diacritics, box drawing,
+    block elements, math &amp; arrows, Powerline separators, IEC power symbols
+    and the Font-Awesome essentials. Runs entirely client-side via
+    <code>opentype.js</code>.
+  </p>
+
+  <div class="actions">
+    <button class="btn" id="build">▸ Build TTF</button>
+    <button class="btn btn-ghost" id="download" disabled>Download .ttf</button>
+    <span class="status" id="status">idle.</span>
+  </div>
+
+  <div class="log" id="log" aria-live="polite">ready · click ▸ Build TTF to assemble the font.</div>
+
+  <div class="stats" id="stats">
+    <div><b id="s-glyphs">—</b><span>glyphs</span></div>
+    <div><b id="s-contours">—</b><span>contours</span></div>
+    <div><b id="s-upm">—</b><span>units/em</span></div>
+    <div><b id="s-cell">—</b><span>cell</span></div>
+    <div><b id="s-size">—</b><span>file size</span></div>
+  </div>
+
+  <div class="sec-title">Live preview <span>rendered with the freshly-built .ttf via @font-face</span></div>
+  <div class="preview big" id="preview1">Tessera Mono</div>
+
+  <div class="preview" id="preview2">def hello(name: str) -> int:
+    return len(name) + 42   # ★ ready
+
+  user@laptop  ~/code/tessera   main  ✓ clean
+  ┌─ files ────────┐ ╔══ readme ══╗
+  │ ▸ glyphs.js    │ ║ █▓▒░ done. ║
+  │ ▸ icons.js     │ ║ U+E0B0 ⇒ ▶ ║
+  └────────────────┘ ╚════════════╝</div>
+
+  <div class="sec-title">Type your own <span>edit below — uses the generated font</span></div>
+  <textarea class="live" id="livetext" rows="3">∀x ∈ N: x² ≥ 0 · √2 ≈ 1.4142 · ƒ(α) → β · ∞
+The quick brown fox jumps over the lazy dog 0123456789</textarea>
+  <div class="preview small" id="preview3"></div>
+
+  <details>
+    <summary>Use in your terminal / editor</summary>
+<pre>// Install (macOS)
+~/Library/Fonts/TesseraMono-Regular.ttf
+
+// Install (Linux)
+~/.local/share/fonts/TesseraMono-Regular.ttf
+fc-cache -fv
+
+// VS Code settings.json
+"editor.fontFamily": "Tessera Mono",
+"editor.fontSize": 12,         // renders 1:1 at the native bitmap
+"editor.fontLigatures": false, // bitmaps don't need them
+
+// iTerm2 / Ghostty / Alacritty / kitty
+// Set font to "Tessera Mono Regular" at integer multiples
+// of 16px line height (16, 32, 48…) for pixel-perfect output.</pre>
+  </details>
+
+  <p class="note">
+    Each pixel becomes one CCW square contour; the renderer's non-zero fill rule
+    handles adjacent pixels. Vertical metrics follow the bitmap's row table —
+    baseline at row 10, ascender 11 rows up, descender 5 rows down, totalling
+    the 1024 UPM grid declared in the spec.
+  </p>
+
+</div>
+
+<script src="glyphs.js"></script>
+<script src="icons.js"></script>
+<script src="https://unpkg.com/opentype.js@1.3.4/dist/opentype.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+  const PX = 64;                              // font units per bitmap pixel
+  const UPM = 1024;                           // units per em (16 rows × 64)
+  const CELL_W = TESSERA.CELL_W;              // 8
+  const CELL_H = TESSERA.CELL_H;              // 16
+  const BASELINE = TESSERA.BASELINE;          // 10 — bottom of row 10 = baseline
+  const ADVANCE = CELL_W * PX;                // 512 — monospace
+
+  // ─── Path tracing: one CCW square contour per filled pixel ─────────────
+  function pixelPath(bitmap) {
+    const path = new opentype.Path();
+    if (!bitmap) return path;
+    for (let y = 0; y < CELL_H; y++) {
+      const row = bitmap[y];
+      if (!row) continue;
+      for (let x = 0; x < CELL_W; x++) {
+        if (!((row >>> (7 - x)) & 1)) continue;
+        const left   = x * PX;
+        const right  = (x + 1) * PX;
+        // Y-up font coords: row 0 sits highest, row BASELINE bottoms out at 0
+        const top    = (BASELINE - y + 1) * PX;
+        const bottom = (BASELINE - y) * PX;
+        path.moveTo(left,  bottom);
+        path.lineTo(right, bottom);
+        path.lineTo(right, top);
+        path.lineTo(left,  top);
+        path.close();
+      }
+    }
+    return path;
+  }
+
+  // Notdef: empty rectangle 1px inset, 1px stroke
+  function notdefPath() {
+    const p = new opentype.Path();
+    const outerL = 1 * PX, outerR = 7 * PX;
+    const outerB = 0,       outerT = 11 * PX;
+    const innerL = 2 * PX, innerR = 6 * PX;
+    const innerB = 1 * PX, innerT = 10 * PX;
+    // Outer CCW
+    p.moveTo(outerL, outerB); p.lineTo(outerR, outerB);
+    p.lineTo(outerR, outerT); p.lineTo(outerL, outerT); p.close();
+    // Inner CW (hole)
+    p.moveTo(innerL, innerB); p.lineTo(innerL, innerT);
+    p.lineTo(innerR, innerT); p.lineTo(innerR, innerB); p.close();
+    return p;
+  }
+
+  // ─── Codepoint collector ───────────────────────────────────────────────
+  function collectCodepoints() {
+    const set = new Set();
+    for (const k of Object.keys(TESSERA.GLYPHS)) set.add(+k);
+    for (const k of Object.keys(TESSERA.DIACRITICS || {})) set.add(+k);
+    for (let cp = 0x2500; cp <= 0x257f; cp++) {
+      if (TESSERA.boxDrawingClean && TESSERA.boxDrawingClean(cp)) set.add(cp);
+    }
+    for (let cp = 0x2580; cp <= 0x259f; cp++) {
+      if (TESSERA.blockElement && TESSERA.blockElement(cp)) set.add(cp);
+    }
+    return [...set].sort((a, b) => a - b);
+  }
+
+  // Pretty range buckets for the log
+  const BUCKETS = [
+    { name: 'Basic Latin',          lo: 0x0020, hi: 0x007e },
+    { name: 'Latin-1 Supplement',   lo: 0x00a0, hi: 0x00ff },
+    { name: 'Box Drawing',          lo: 0x2500, hi: 0x257f },
+    { name: 'Block Elements',       lo: 0x2580, hi: 0x259f },
+    { name: 'Arrows + Math',        lo: 0x2190, hi: 0x22ff },
+    { name: 'IEC Power Symbols',    lo: 0x23fb, hi: 0x23fd },
+    { name: 'Misc (sleep glyph)',   lo: 0x2b58, hi: 0x2b58 },
+    { name: 'Powerline',            lo: 0xe0a0, hi: 0xe0b3 },
+    { name: 'Devicons',             lo: 0xe700, hi: 0xe7ff },
+    { name: 'Font Awesome',         lo: 0xf000, hi: 0xf2ff }
+  ];
+
+  // ─── Logging helpers ───────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  const statusEl = $('status');
+  function log(line, cls) {
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = line + '\n';
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function setStatus(s, on) {
+    statusEl.textContent = s;
+    statusEl.classList.toggle('go', !!on);
+  }
+
+  // ─── Main build ────────────────────────────────────────────────────────
+  let lastUrl = null;
+
+  async function build() {
+    logEl.innerHTML = '';
+    setStatus('working…', true);
+    $('build').disabled = true;
+    $('download').disabled = true;
+
+    log('▸ Tessera Mono — TTF build', 'head');
+    log('  upm 1024 · cell 8×16 · advance 512 · baseline row 10');
+    log('');
+
+    await new Promise(r => setTimeout(r, 60));
+
+    const cps = collectCodepoints();
+    log(`collected ${cps.length} unique codepoints`);
+
+    // Per-bucket tally
+    for (const b of BUCKETS) {
+      const inRange = cps.filter(c => c >= b.lo && c <= b.hi).length;
+      if (inRange) log(`  ${b.name.padEnd(22)} ${String(inRange).padStart(4)} glyphs`, 'ok');
+    }
+    const accounted = BUCKETS.reduce((a, b) => a + cps.filter(c => c >= b.lo && c <= b.hi).length, 0);
+    if (accounted < cps.length) log(`  (uncategorized)            ${cps.length - accounted} glyphs`, 'skip');
+    log('');
+
+    await new Promise(r => setTimeout(r, 60));
+
+    // Build glyph objects
+    const notdef = new opentype.Glyph({
+      name: '.notdef',
+      unicode: 0,
+      advanceWidth: ADVANCE,
+      path: notdefPath()
+    });
+    const glyphs = [notdef];
+    let contours = 0;
+
+    for (const cp of cps) {
+      const bitmap = TESSERA.getGlyph(cp);
+      if (!bitmap) continue;
+      const path = pixelPath(bitmap);
+      // Count contours (one closeZ per pixel pop)
+      for (const cmd of path.commands) if (cmd.type === 'Z') contours++;
+      const name = 'u' + cp.toString(16).toUpperCase().padStart(4, '0');
+      glyphs.push(new opentype.Glyph({
+        name, unicode: cp, advanceWidth: ADVANCE, path
+      }));
+    }
+    log(`traced ${glyphs.length - 1} glyphs / ${contours} contours`);
+    log('');
+
+    await new Promise(r => setTimeout(r, 60));
+
+    log('assembling Font {…}');
+    const font = new opentype.Font({
+      familyName:    'Tessera Mono',
+      styleName:     'Regular',
+      unitsPerEm:    UPM,
+      ascender:      11 * PX,    //  704
+      descender:    -5  * PX,    // -320
+      glyphs
+    });
+
+    log('serializing to TTF…');
+    const buf = font.toArrayBuffer();
+    const sizeKb = (buf.byteLength / 1024).toFixed(1);
+    log(`✓ ${sizeKb} KB · TrueType`, 'ok');
+
+    // Update stats
+    $('s-glyphs').textContent   = (glyphs.length - 1).toLocaleString();
+    $('s-contours').textContent = contours.toLocaleString();
+    $('s-upm').textContent      = UPM.toLocaleString();
+    $('s-cell').textContent     = `${CELL_W} × ${CELL_H}`;
+    $('s-size').textContent     = sizeKb + ' KB';
+
+    // Download wiring
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    const blob = new Blob([buf], { type: 'font/ttf' });
+    const url  = URL.createObjectURL(blob);
+    lastUrl = url;
+
+    const dl = $('download');
+    dl.disabled = false;
+    dl.onclick = () => {
+      const a = document.createElement('a');
+      a.href = url; a.download = 'TesseraMono-Regular.ttf';
+      document.body.appendChild(a); a.click(); a.remove();
+    };
+
+    // Inject @font-face for live preview
+    const old = document.getElementById('tessera-built-face');
+    if (old) old.remove();
+    const style = document.createElement('style');
+    style.id = 'tessera-built-face';
+    style.textContent = `
+      @font-face {
+        font-family: 'TesseraMonoBuilt';
+        src: url('${url}') format('truetype');
+        font-weight: 400; font-style: normal;
+      }`;
+    document.head.appendChild(style);
+
+    // Force re-flow on previews
+    for (const id of ['preview1', 'preview2', 'preview3']) {
+      const el = $(id);
+      if (el) { el.style.fontFamily = ''; el.offsetHeight; el.style.fontFamily = "'TesseraMonoBuilt', " + 'ui-monospace, monospace'; }
+    }
+    // Sync live text preview
+    $('preview3').textContent = $('livetext').value;
+
+    setStatus(`built — ${sizeKb} KB · ${glyphs.length - 1} glyphs`, true);
+    $('build').disabled = false;
+    $('build').textContent = '↻ Rebuild TTF';
+  }
+
+  $('build').addEventListener('click', build);
+  $('livetext').addEventListener('input', e => {
+    $('preview3').textContent = e.target.value;
+  });
+  // Seed the live preview text
+  $('preview3').textContent = $('livetext').value;
+})();
+</script>
+</body>
+</html>

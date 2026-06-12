@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.bdf
+atlas-edit.png
+atlas-edit.json
+.DS_Store
+result
