@@ -46,14 +46,35 @@ for (let cp = 0x2500; cp <= 0x257f; cp++) if (T.boxDrawingClean(cp)) set.add(cp)
 for (let cp = 0x2580; cp <= 0x259f; cp++) if (T.blockElement(cp)) set.add(cp);
 const cps = [...set].sort((a, b) => a - b).filter(cp => T.getGlyph(cp));
 
-// ─── Scale one 8-bit row to N bytes (each pixel → N bits) ─────────────
-function scaleRow(row) {
+// ─── Tight bounding box of a bitmap, in cell pixels ────────────────────
+function inkBox(bitmap) {
+  let x0 = CELL_W, x1 = 0, y0 = CELL_H, y1 = 0;
+  for (let y = 0; y < CELL_H; y++) {
+    const row = bitmap[y] || 0;
+    if (!row) continue;
+    y0 = Math.min(y0, y);
+    y1 = Math.max(y1, y + 1);
+    for (let x = 0; x < CELL_W; x++) {
+      if ((row >>> (7 - x)) & 1) {
+        x0 = Math.min(x0, x);
+        x1 = Math.max(x1, x + 1);
+      }
+    }
+  }
+  return y1 > y0 ? { x0, x1, y0, y1 } : null;
+}
+
+// ─── Scale a row slice [x0,x1) to N bits per pixel, hex, byte-padded ───
+function scaleRow(row, x0, x1) {
+  const w = (x1 - x0) * N;
+  const bytes = Math.ceil(w / 8);
   let bits = 0n;
-  for (let x = 0; x < CELL_W; x++) {
+  for (let x = x0; x < x1; x++) {
     bits <<= BigInt(N);
     if ((row >>> (7 - x)) & 1) bits |= (1n << BigInt(N)) - 1n;
   }
-  return bits.toString(16).toUpperCase().padStart(N * 2, '0');
+  bits <<= BigInt(bytes * 8 - w); // pad to byte boundary on the right
+  return bits.toString(16).toUpperCase().padStart(bytes * 2, '0');
 }
 
 // ─── Emit BDF ──────────────────────────────────────────────────────────
@@ -61,13 +82,13 @@ const W = CELL_W * N;
 const H = CELL_H * N;
 const lines = [];
 lines.push('STARTFONT 2.1');
-lines.push(`FONT -zexk-Tessera Mono-Medium-R-Normal--${H}-${H * 10}-72-72-C-${W * 10}-ISO10646-1`);
+lines.push(`FONT -zexk-Tessera Mono-Regular-R-Normal--${H}-${H * 10}-72-72-C-${W * 10}-ISO10646-1`);
 lines.push(`SIZE ${H} 72 72`);
 lines.push(`FONTBOUNDINGBOX ${W} ${H} 0 ${-DESCENT * N}`);
-lines.push('STARTPROPERTIES 12');
+lines.push('STARTPROPERTIES 14');
 lines.push('FOUNDRY "zexk"');
 lines.push('FAMILY_NAME "Tessera Mono"');
-lines.push('WEIGHT_NAME "Medium"');
+lines.push('WEIGHT_NAME "Regular"');
 lines.push('SLANT "R"');
 lines.push('SETWIDTH_NAME "Normal"');
 lines.push('SPACING "C"');
@@ -75,6 +96,10 @@ lines.push(`PIXEL_SIZE ${H}`);
 lines.push(`POINT_SIZE ${H * 10}`);
 lines.push('RESOLUTION_X 72');
 lines.push('RESOLUTION_Y 72');
+// FreeType keys the Unicode charmap off these two properties; without
+// them fonttosfnt emits a symbol cmap and all char lookups fail
+lines.push('CHARSET_REGISTRY "ISO10646"');
+lines.push('CHARSET_ENCODING "1"');
 lines.push(`FONT_ASCENT ${ASCENT * N}`);
 lines.push(`FONT_DESCENT ${DESCENT * N}`);
 lines.push('ENDPROPERTIES');
@@ -86,11 +111,21 @@ for (const cp of cps) {
   lines.push(`ENCODING ${cp}`);
   lines.push(`SWIDTH ${Math.round((W / H) * 1000)} 0`);
   lines.push(`DWIDTH ${W} 0`);
-  lines.push(`BBX ${W} ${H} 0 ${-DESCENT * N}`);
-  lines.push('BITMAP');
-  for (let y = 0; y < CELL_H; y++) {
-    const hex = scaleRow(bitmap[y] || 0);
-    for (let r = 0; r < N; r++) lines.push(hex);
+  const box = inkBox(bitmap);
+  if (!box) {
+    lines.push('BBX 0 0 0 0');
+    lines.push('BITMAP');
+  } else {
+    const { x0, x1, y0, y1 } = box;
+    // yoff = bottom edge of the box relative to the baseline (row ASCENT-1
+    // is the last row above it)
+    const yoff = (ASCENT - y1) * N;
+    lines.push(`BBX ${(x1 - x0) * N} ${(y1 - y0) * N} ${x0 * N} ${yoff}`);
+    lines.push('BITMAP');
+    for (let y = y0; y < y1; y++) {
+      const hex = scaleRow(bitmap[y] || 0, x0, x1);
+      for (let r = 0; r < N; r++) lines.push(hex);
+    }
   }
   lines.push('ENDCHAR');
 }
