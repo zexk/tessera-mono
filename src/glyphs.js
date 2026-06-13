@@ -3705,6 +3705,29 @@
     return out;
   };
 
+  // Braille patterns (U+2800..U+28FF) — a 2×4 grid of 2×2-px dots.
+  // Dot N is bit (N-1) of (cp - 0x2800); the standard 8-dot layout is
+  //   1 4     left column → px cols 1-2, right column → px cols 5-6
+  //   2 5     the four rows  → px rows 1-2 / 5-6 / 9-10 / 13-14
+  //   3 6     1-px margins all round, so dots stay perfectly centred on
+  //   7 8     the even cell and tile seamlessly into the neighbours.
+  const BRAILLE_DOTS = [ // bit index → [gridCol, gridRow]
+    [0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [0, 3], [1, 3],
+  ];
+  TESSERA.braille = function (cp) {
+    if (cp < 0x2800 || cp > 0x28ff) return null;
+    const bits = cp - 0x2800;
+    const out = new Uint8Array(16);
+    const dot = (gx, gy) => {
+      const x = gx ? 5 : 1, y = 1 + gy * 4; // 2-px-wide dot at cols x,x+1
+      out[y]     |= 3 << (6 - x);
+      out[y + 1] |= 3 << (6 - x);
+    };
+    for (let i = 0; i < 8; i++)
+      if (bits & (1 << i)) dot(BRAILLE_DOTS[i][0], BRAILLE_DOTS[i][1]);
+    return out;
+  };
+
   // —— Master glyph lookup ——
   TESSERA.getGlyph = function (cp) {
     if (GLYPHS[cp]) return GLYPHS[cp];
@@ -3719,6 +3742,7 @@
     }
     if (cp >= 0x2500 && cp <= 0x257f) return TESSERA.boxDrawingClean(cp);
     if (cp >= 0x2580 && cp <= 0x259f) return TESSERA.blockElement(cp);
+    if (cp >= 0x2800 && cp <= 0x28ff) return TESSERA.braille(cp);
     return null;
   };
 

@@ -94,6 +94,9 @@ function collectCodepoints() {
   for (let cp = 0x2580; cp <= 0x259f; cp++) {
     if (T.blockElement && T.blockElement(cp)) set.add(cp);
   }
+  for (let cp = 0x2800; cp <= 0x28ff; cp++) {
+    if (T.braille && T.braille(cp)) set.add(cp); // Braille (incl. U+2800 blank)
+  }
   return [...set].sort((a, b) => a - b);
 }
 

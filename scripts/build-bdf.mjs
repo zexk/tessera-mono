@@ -44,6 +44,7 @@ for (const k of Object.keys(T.GLYPHS)) set.add(+k);
 for (const k of Object.keys(T.DIACRITICS || {})) set.add(+k);
 for (let cp = 0x2500; cp <= 0x257f; cp++) if (T.boxDrawingClean(cp)) set.add(cp);
 for (let cp = 0x2580; cp <= 0x259f; cp++) if (T.blockElement(cp)) set.add(cp);
+for (let cp = 0x2800; cp <= 0x28ff; cp++) set.add(cp); // Braille (incl. U+2800 blank)
 const cps = [...set].sort((a, b) => a - b).filter(cp => T.getGlyph(cp));
 
 // ─── Tight bounding box of a bitmap, in cell pixels ────────────────────
