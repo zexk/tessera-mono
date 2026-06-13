@@ -1,5 +1,6 @@
 node_modules/
 dist/
+public/
 *.bdf
 atlas-edit.png
 atlas-edit.json
