@@ -61,6 +61,35 @@
   button:hover{border-color:var(--accent)}
   button.primary{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
   #status{min-height:16px;font-size:12px;color:var(--dim)}
+  /* nerd-font reference (togglable split pane) */
+  @font-face{font-family:'NFRef';src:url('/api/nerdfont');font-display:swap}
+  #reftoggle{margin-left:auto;font-size:11px;padding:6px 12px}
+  #reftoggle.on{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
+  #ref{width:368px;flex:none;display:none;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);overflow:hidden}
+  body.refon #ref{display:flex}
+  #ref h1{margin:0;padding:12px 14px;font-size:12px;letter-spacing:.12em;color:var(--dim);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+  #ref h1 .fn{color:var(--dim);font-size:9px;letter-spacing:0;font-weight:400}
+  #ref-body{display:flex;flex-direction:column;flex:1;overflow:hidden}
+  .nf{font-family:'NFRef',monospace;line-height:1}
+  #ref-cmp{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--line)}
+  .cmp{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;background:#0d0e12;border-radius:8px;padding:12px 6px}
+  .cmp .big{height:96px;display:flex;align-items:center;justify-content:center}
+  .cmp .nf{font-size:86px}
+  .cmp canvas{image-rendering:pixelated}
+  .cmp label{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+  #ref-meta{padding:10px 14px 8px;font-size:11px;color:var(--dim)}
+  #ref-meta b{color:var(--ink)}
+  #ref-meta .nolatin{color:var(--base)}
+  #ref-range{margin:0 14px 8px;padding:6px 9px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink);font:inherit;font-size:11px}
+  #ref-range:focus{outline:none;border-color:var(--accent)}
+  #ref-grid{flex:1;overflow:auto;padding:2px 10px 16px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;align-content:start}
+  .sp{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;background:var(--bg);border:1px solid transparent;border-radius:6px;cursor:default}
+  .sp .nf{font-size:25px;height:30px;display:flex;align-items:center;color:var(--ink)}
+  .sp .h{font-size:8px;color:var(--dim)}
+  .sp.have{border-color:var(--x);cursor:pointer}
+  .sp.have .h{color:var(--x)}
+  .sp.cur{background:#262a33;border-color:var(--accent)}
+  #ref-empty{padding:24px 16px;color:var(--dim);font-size:11px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -81,6 +110,7 @@
       <span class="cp" id="t-cp"></span>
       <span class="lab" id="t-lab"></span>
       <span id="dirty">● unsaved</span>
+      <button id="reftoggle" title="toggle Nerd Font reference (r)">⧉ NF ref</button>
     </div>
     <div class="legend">
       <i style="border-color:var(--cap)">cap top · r2</i>
@@ -102,9 +132,23 @@
       </div>
     </div>
   </div>
+  <div id="ref">
+    <h1>NERD FONT · REFERENCE <span class="fn" id="ref-fn"></span></h1>
+    <div id="ref-body">
+      <div id="ref-cmp">
+        <div class="cmp"><div class="big"><span id="ref-nf" class="nf"></span></div><label>Nerd Font</label></div>
+        <div class="cmp"><div class="big"><canvas id="ref-tess"></canvas></div><label>Tessera</label></div>
+      </div>
+      <div id="ref-meta"></div>
+      <input id="ref-range" placeholder="range  e.g.  e700-e75f" autocomplete="off">
+      <div id="ref-grid"></div>
+    </div>
+    <div id="ref-empty" hidden></div>
+  </div>
 <script>
 const W=8, H=16, CAP=2, XT=4, BASE=10, DESC=12;
 let GLYPHS=[], byCp=new Map(), cur=null, grid=blank(), dirty=false, scope='glyphs';
+let refOn=false, refStart=0, refEnd=0;
 
 function blank(){ return Array.from({length:H}, ()=>Array(W).fill(false)); }
 function rowsToGrid(rows){ return rows.map(r=>[...r].map(c=>c==='#')); }
@@ -181,6 +225,7 @@ function selectGlyph(cp){
   cur=byCp.get(cp); if(!cur) return;
   grid=rowsToGrid(cur.rows); setDirty(false); paintGrid(); renderTitle(); renderPreview();
   document.querySelectorAll('.gi').forEach(g=>g.classList.toggle('sel', +g.dataset.cp===cp));
+  if(refOn) renderRef();
 }
 function renderTitle(){
   document.getElementById('t-ch').textContent = dispCh(cur.cp);
@@ -190,6 +235,7 @@ function renderTitle(){
 function renderPreview(){
   drawRows(document.getElementById('pv1'), gridToRows(grid), 10);
   drawText(document.getElementById('pv2'), 'Il1|¦j '+(chOf(cur.cp)||' ')+' n'+(chOf(cur.cp)||' ')+'o', 3);
+  if(refOn && cur) drawRows(document.getElementById('ref-tess'), gridToRows(grid), 6); // live compare
 }
 function setDirty(v){ dirty=v; document.getElementById('dirty').style.visibility=v?'visible':'hidden'; }
 
@@ -238,6 +284,61 @@ document.getElementById('save').addEventListener('click', save);
 document.getElementById('revert').addEventListener('click', ()=>{ grid=rowsToGrid(cur.rows); setDirty(false); paintGrid(); renderPreview(); });
 document.getElementById('clear').addEventListener('click', ()=>{ grid=blank(); setDirty(true); paintGrid(); renderPreview(); });
 window.addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey) && e.key==='s'){ e.preventDefault(); save(); } });
+
+// ---- nerd-font reference pane ----
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function toggleRef(on){
+  refOn = on==null ? !refOn : !!on;
+  document.body.classList.toggle('refon', refOn);
+  document.getElementById('reftoggle').classList.toggle('on', refOn);
+  if(refOn) renderRef();
+}
+function renderRef(){
+  if(!refOn || !cur) return;
+  document.getElementById('ref-nf').textContent = String.fromCodePoint(cur.cp);
+  drawRows(document.getElementById('ref-tess'), gridToRows(grid), 6);
+  document.getElementById('ref-meta').innerHTML =
+    'U+'+cur.cp.toString(16).toUpperCase().padStart(4,'0') +
+    (cur.label ? ' · <b>'+esc(cur.label)+'</b>' : '') +
+    (cur.cp<0xE000 ? ' <span class="nolatin">· symbols-only: no Latin ref</span>' : '');
+  refStart = Math.max(0, cur.cp & ~0x0f); refEnd = refStart + 0x5f; // 16-aligned block window
+  document.getElementById('ref-range').value = refStart.toString(16)+'-'+refEnd.toString(16);
+  renderSpecimen();
+}
+function renderSpecimen(){
+  const g=document.getElementById('ref-grid'); g.innerHTML='';
+  let s=refStart, e=refEnd; if(e<s) [s,e]=[e,s];
+  e=Math.min(e, s+0xff); // cap at 256 cells
+  for(let cp=s; cp<=e; cp++){
+    const have=byCp.has(cp);
+    const sp=el('div','sp'+(have?' have':'')+(cur&&cp===cur.cp?' cur':''));
+    const ic=el('div','nf'); ic.textContent=String.fromCodePoint(cp); sp.appendChild(ic);
+    sp.appendChild(el('div','h', cp.toString(16)));
+    sp.title='0x'+cp.toString(16)+(have?' · in Tessera (click to edit)':' · not yet in Tessera');
+    if(have) sp.addEventListener('click', ()=>selectGlyph(cp));
+    g.appendChild(sp);
+  }
+}
+document.getElementById('reftoggle').addEventListener('click', ()=>toggleRef());
+document.getElementById('ref-range').addEventListener('input', e=>{
+  const m=e.target.value.match(/([0-9a-fA-F]{1,6})\s*[-–]\s*([0-9a-fA-F]{1,6})/);
+  if(m){ refStart=parseInt(m[1],16); refEnd=parseInt(m[2],16); renderSpecimen(); }
+});
+window.addEventListener('keydown', e=>{
+  if(e.key==='r' && !e.metaKey && !e.ctrlKey && !e.altKey
+     && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||'')){ e.preventDefault(); toggleRef(); }
+});
+(async function(){ // report resolved font / graceful empty state
+  try{
+    const info=await (await fetch('/api/nerdfont/info')).json();
+    document.getElementById('ref-fn').textContent = info.found ? info.name : 'not found';
+    if(!info.found){
+      document.getElementById('ref-body').style.display='none';
+      const e=document.getElementById('ref-empty'); e.hidden=false;
+      e.textContent='No Nerd Font found. Run inside `nix develop` (provides nerd-fonts.symbols-only) or set NERD_FONT=/path/to/font.ttf.';
+    }
+  }catch{}
+})();
 
 // ---- boot ----
 (async function(){

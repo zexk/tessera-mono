@@ -9,13 +9,45 @@
 
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
+import { existsSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = resolve(DIR, '..', 'src');
 const EDITOR_HTML = resolve(DIR, 'editor.html');
 const PORT = Number(process.env.PORT) || 8009;
+
+// ── Nerd Font specimen (reference pane) ────────────────────────────────
+// devShell exports NERD_FONT_DIR (nerd-fonts.symbols-only); fall back to a
+// few standard font dirs so the editor still works outside `nix develop`.
+function findFonts(dir) {
+  if (!dir || !existsSync(dir)) return [];
+  try {
+    return readdirSync(dir, { recursive: true })
+      .map((f) => resolve(dir, f.toString()))
+      .filter((f) => /\.(ttf|otf)$/i.test(f));
+  } catch { return []; }
+}
+function resolveNerdFont() {
+  if (process.env.NERD_FONT && existsSync(process.env.NERD_FONT)) return process.env.NERD_FONT;
+  const dirs = [
+    process.env.NERD_FONT_DIR,
+    resolve(homedir(), '.nix-profile/share/fonts'),
+    resolve(homedir(), '.local/share/fonts'),
+    '/run/current-system/sw/share/fonts',
+  ].filter(Boolean);
+  for (const d of dirs) {
+    const c = findFonts(d);
+    if (!c.length) continue;
+    // prefer a monospace Nerd Font, then any Nerd Font, then any font
+    return c.find((f) => /nerd.*mono/i.test(f)) || c.find((f) => /nerd/i.test(f))
+        || c.find((f) => /mono/i.test(f)) || c[0];
+  }
+  return null;
+}
+const NERD_FONT = resolveNerdFont();
 
 // Two source formats, same 8×16 bitmap body:
 //   glyphs.js:  GLYPHS[0x69] = G(/* i */`\n…`)
@@ -85,6 +117,20 @@ const server = createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/api/glyphs')
       return send(res, 200, 'application/json', JSON.stringify(await listAll()));
 
+    if (req.method === 'GET' && req.url === '/api/nerdfont/info')
+      return send(res, 200, 'application/json',
+        JSON.stringify({ found: !!NERD_FONT, name: NERD_FONT ? NERD_FONT.split('/').pop() : null }));
+
+    if (req.method === 'GET' && req.url === '/api/nerdfont') {
+      if (!NERD_FONT) return send(res, 404, 'text/plain', 'no nerd font found');
+      const buf = await readFile(NERD_FONT);
+      res.writeHead(200, {
+        'content-type': /\.otf$/i.test(NERD_FONT) ? 'font/otf' : 'font/ttf',
+        'cache-control': 'max-age=86400',
+      });
+      return res.end(buf);
+    }
+
     if (req.method === 'POST' && req.url === '/api/save') {
       let raw = '';
       for await (const chunk of req) raw += chunk;
@@ -104,4 +150,5 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log('tessera glyph editor → http://localhost:' + PORT);
   console.log('editing ' + FILES.glyphs.path + ' + ' + FILES.icons.path);
+  console.log('nerd font ref: ' + (NERD_FONT || 'none — enter `nix develop` or set NERD_FONT'));
 });

@@ -139,7 +139,10 @@
             fonttosfnt      # BDF → OTB bitmap strikes
             fd
             ripgrep
+            nerd-fonts.symbols-only  # NF icon specimen for the web editor's reference pane
           ];
+          # edit-server.mjs serves the specimen from here (/api/nerdfont)
+          NERD_FONT_DIR = "${pkgs.nerd-fonts.symbols-only}/share/fonts";
         };
       });
 }
