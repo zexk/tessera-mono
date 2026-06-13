@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tessera Mono — glyph editor</title>
+<style>
+  :root{
+    --bg:#14151a; --panel:#1b1d24; --line:#2a2d36; --ink:#e8e6df; --dim:#7c818c;
+    --accent:#e0a05a; --cap:#5a8fe0; --x:#5ad08a; --base:#e0625a; --desc:#a87ad8;
+    --on:#e8e6df; --off:#23262f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex;
+       font:13px/1.4 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+  /* sidebar */
+  #side{width:286px;flex:none;display:flex;flex-direction:column;background:var(--panel);border-right:1px solid var(--line)}
+  #side h1{margin:0;padding:12px 14px;font-size:12px;letter-spacing:.12em;color:var(--dim);border-bottom:1px solid var(--line)}
+  #search{margin:10px 10px 8px;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink);font:inherit}
+  #search:focus{outline:none;border-color:var(--accent)}
+  #scope{display:flex;gap:6px;margin:0 10px 8px}
+  #scope button{flex:1;padding:6px 0;font-size:11px;background:var(--bg);border:1px solid var(--line);color:var(--dim);border-radius:6px;cursor:pointer}
+  #scope button.on{color:var(--ink);border-color:var(--accent)}
+  #count{margin:0 12px 6px;font-size:10px;color:var(--dim)}
+  #list{flex:1;overflow:auto;padding:2px 8px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start}
+  .gi{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px;background:var(--bg);border:1px solid transparent;border-radius:6px;cursor:pointer}
+  .gi:hover{border-color:var(--line)}
+  .gi.sel{border-color:var(--accent);background:#262a33}
+  .gi canvas{image-rendering:pixelated}
+  .gi .cp{font-size:9px;color:var(--dim)}
+  /* main */
+  #main{flex:1;overflow:auto;padding:20px 26px;display:flex;flex-direction:column;gap:16px}
+  #title{display:flex;align-items:baseline;gap:12px}
+  #title .ch{font-size:22px;line-height:1}
+  #title .cp{color:var(--ink)}
+  #title .lab{color:var(--dim)}
+  #dirty{color:var(--accent);visibility:hidden;font-size:11px}
+  .legend{display:flex;gap:16px;font-size:10px;color:var(--dim);flex-wrap:wrap}
+  .legend i{font-style:normal;border-bottom:2px solid;padding-bottom:1px}
+  #editor{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap}
+  /* edit grid */
+  #grid{display:grid;grid-template-columns:34px repeat(8,26px);user-select:none}
+  #grid .col{display:flex;align-items:flex-end;justify-content:center;height:18px;font-size:9px;color:var(--dim)}
+  #grid .rl{display:flex;align-items:center;justify-content:flex-end;gap:5px;height:26px;padding-right:7px;font-size:9px;color:var(--dim)}
+  #grid .rl b{color:var(--accent)}
+  .px{width:26px;height:26px;border:1px solid #20232b;background:var(--off);cursor:crosshair}
+  .px.on{background:var(--on)}
+  .px.cap{border-top-color:var(--cap)}
+  .px.xt{border-top-color:var(--x)}
+  .px.base{border-bottom-color:var(--base)}
+  .px.desc{border-bottom-color:var(--desc)}
+  .px.cap,.px.xt{border-top-width:2px}
+  .px.base,.px.desc{border-bottom-width:2px}
+  /* right column */
+  #right{display:flex;flex-direction:column;gap:14px;min-width:200px}
+  .prev{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+  .prev h2{margin:0 0 9px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .prev canvas{image-rendering:pixelated;display:block;background:#0d0e12;border-radius:3px}
+  #btns{display:flex;gap:8px}
+  button{font:inherit;color:var(--ink);background:#262a33;border:1px solid var(--line);padding:9px 16px;border-radius:6px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
+  #status{min-height:16px;font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+  <div id="side">
+    <h1>TESSERA · GLYPHS</h1>
+    <input id="search" placeholder="filter:  i   ·   69   ·   git   ·   arrow" autocomplete="off">
+    <div id="scope">
+      <button data-scope="glyphs" class="on">Latin</button>
+      <button data-scope="icons">Icons</button>
+      <button data-scope="all">All</button>
+    </div>
+    <div id="count"></div>
+    <div id="list"></div>
+  </div>
+  <div id="main">
+    <div id="title">
+      <span class="ch" id="t-ch"></span>
+      <span class="cp" id="t-cp"></span>
+      <span class="lab" id="t-lab"></span>
+      <span id="dirty">● unsaved</span>
+    </div>
+    <div class="legend">
+      <i style="border-color:var(--cap)">cap top · r2</i>
+      <i style="border-color:var(--x)">x-height · r4</i>
+      <i style="border-color:var(--base)">baseline · r10</i>
+      <i style="border-color:var(--desc)">descender · r12</i>
+    </div>
+    <div id="editor">
+      <div id="grid"></div>
+      <div id="right">
+        <div class="prev"><h2>glyph</h2><canvas id="pv1"></canvas></div>
+        <div class="prev"><h2>in context</h2><canvas id="pv2"></canvas></div>
+        <div id="btns">
+          <button class="primary" id="save">Save</button>
+          <button id="revert">Revert</button>
+          <button id="clear">Clear</button>
+        </div>
+        <div id="status">left-click draws · right-click erases · drag to paint · ⌘/Ctrl+S saves</div>
+      </div>
+    </div>
+  </div>
+<script>
+const W=8, H=16, CAP=2, XT=4, BASE=10, DESC=12;
+let GLYPHS=[], byCp=new Map(), cur=null, grid=blank(), dirty=false, scope='glyphs';
+
+function blank(){ return Array.from({length:H}, ()=>Array(W).fill(false)); }
+function rowsToGrid(rows){ return rows.map(r=>[...r].map(c=>c==='#')); }
+function gridToRows(g){ return g.map(row=>row.map(v=>v?'#':'.').join('')); }
+const chOf = cp => cp>=0x21 ? String.fromCodePoint(cp) : '';          // for codePointAt / preview
+const dispCh = cp => (cp>=0x21 && cp<0xE000) ? String.fromCodePoint(cp) : ''; // hide PUA tofu
+
+// ---- canvas drawing ----
+function drawRows(canvas, rows, scale){
+  canvas.width=W*scale; canvas.height=H*scale;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#e8e6df';
+  for(let r=0;r<H;r++) for(let c=0;c<W;c++)
+    if(rows[r] && rows[r][c]==='#') ctx.fillRect(c*scale, r*scale, scale, scale);
+}
+function rowsFor(cp){ return (cur && cp===cur.cp) ? gridToRows(grid) : (byCp.get(cp)?.rows || []); }
+function drawText(canvas, str, scale){
+  const cps=[...str];
+  canvas.width=cps.length*W*scale; canvas.height=H*scale;
+  const ctx=canvas.getContext('2d'); ctx.fillStyle='#e8e6df';
+  cps.forEach((c,i)=>{
+    const rows=rowsFor(c.codePointAt(0));
+    for(let r=0;r<H;r++) for(let x=0;x<W;x++)
+      if(rows[r] && rows[r][x]==='#') ctx.fillRect((i*W+x)*scale, r*scale, scale, scale);
+  });
+}
+
+// ---- build edit grid once ----
+const gridEl=document.getElementById('grid'), cells=[];
+const el=(t,cls,txt)=>{ const e=document.createElement(t); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; };
+function buildGrid(){
+  gridEl.appendChild(el('div','col',''));
+  for(let c=0;c<W;c++) gridEl.appendChild(el('div','col',String(c)));
+  for(let r=0;r<H;r++){
+    const tag = r===CAP?'cap' : r===XT?'x' : r===BASE?'base' : r===DESC?'desc' : '';
+    const rl=el('div','rl'); rl.innerHTML=(tag?'<b>'+tag+'</b>':'')+r; gridEl.appendChild(rl);
+    cells[r]=[];
+    for(let c=0;c<W;c++){
+      const px=el('div','px');
+      if(r===CAP)px.classList.add('cap'); if(r===XT)px.classList.add('xt');
+      if(r===BASE)px.classList.add('base'); if(r===DESC)px.classList.add('desc');
+      px.dataset.r=r; px.dataset.c=c; cells[r][c]=px; gridEl.appendChild(px);
+    }
+  }
+}
+
+// ---- painting ----
+let painting=false, paintVal=true;
+gridEl.addEventListener('contextmenu', e=>e.preventDefault());
+gridEl.addEventListener('mousedown', e=>{
+  const px=e.target.closest('.px'); if(!px) return;
+  e.preventDefault();
+  painting=true; paintVal=(e.button===0); // left draws, anything else erases
+  apply(px);
+});
+gridEl.addEventListener('mouseover', e=>{
+  if(!painting) return;
+  const px=e.target.closest('.px'); if(px) apply(px);
+});
+window.addEventListener('mouseup', ()=>painting=false);
+function apply(px){
+  const r=+px.dataset.r, c=+px.dataset.c;
+  if(grid[r][c]===paintVal) return;
+  grid[r][c]=paintVal; px.classList.toggle('on', paintVal);
+  setDirty(true); renderPreview();
+}
+function paintGrid(){
+  for(let r=0;r<H;r++) for(let c=0;c<W;c++) cells[r][c].classList.toggle('on', grid[r][c]);
+}
+
+// ---- select / render ----
+function selectGlyph(cp){
+  cur=byCp.get(cp); if(!cur) return;
+  grid=rowsToGrid(cur.rows); setDirty(false); paintGrid(); renderTitle(); renderPreview();
+  document.querySelectorAll('.gi').forEach(g=>g.classList.toggle('sel', +g.dataset.cp===cp));
+}
+function renderTitle(){
+  document.getElementById('t-ch').textContent = dispCh(cur.cp);
+  document.getElementById('t-cp').textContent = 'U+'+cur.cp.toString(16).toUpperCase().padStart(4,'0');
+  document.getElementById('t-lab').textContent = cur.label ? (cur.src==='icons' ? cur.label : '/* '+cur.label+' */') : '';
+}
+function renderPreview(){
+  drawRows(document.getElementById('pv1'), gridToRows(grid), 10);
+  drawText(document.getElementById('pv2'), 'Il1|¦j '+(chOf(cur.cp)||' ')+' n'+(chOf(cur.cp)||' ')+'o', 3);
+}
+function setDirty(v){ dirty=v; document.getElementById('dirty').style.visibility=v?'visible':'hidden'; }
+
+// ---- glyph list ----
+function renderList(filter=''){
+  const list=document.getElementById('list'); list.innerHTML='';
+  const f=filter.trim().toLowerCase();
+  let n=0;
+  for(const g of GLYPHS){
+    if(scope!=='all' && g.src!==scope) continue;
+    if(f && !(chOf(g.cp)===filter.trim() || g.cp.toString(16).includes(f) || g.label.toLowerCase().includes(f))) continue;
+    const ch=dispCh(g.cp), hex=g.cp.toString(16);
+    const gi=el('div','gi'); gi.dataset.cp=g.cp; gi.title=(g.label?g.label+' · ':'')+'0x'+hex;
+    const cv=document.createElement('canvas'); drawRows(cv, g.rows, 3); gi.appendChild(cv);
+    gi.appendChild(el('div','cp', hex+(ch?' '+ch:'')));
+    gi.addEventListener('click', ()=>selectGlyph(g.cp));
+    if(cur && g.cp===cur.cp) gi.classList.add('sel');
+    list.appendChild(gi); n++;
+  }
+  document.getElementById('count').textContent = n+' glyph'+(n===1?'':'s');
+}
+document.getElementById('search').addEventListener('input', e=>renderList(e.target.value));
+document.getElementById('scope').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-scope]'); if(!b) return;
+  scope=b.dataset.scope;
+  document.querySelectorAll('#scope button').forEach(x=>x.classList.toggle('on', x===b));
+  renderList(document.getElementById('search').value);
+});
+
+// ---- actions ----
+async function save(){
+  const rows=gridToRows(grid), st=document.getElementById('status');
+  st.textContent='saving…';
+  try{
+    const res=await fetch('/api/save',{ method:'POST', headers:{'content-type':'application/json'},
+      body:JSON.stringify({src:cur.src, cp:cur.cp, rows}) });
+    const j=await res.json();
+    if(!res.ok || j.error) throw new Error(j.error || ('HTTP '+res.status));
+    cur.rows=rows; setDirty(false);
+    const gi=[...document.querySelectorAll('.gi')].find(g=>+g.dataset.cp===cur.cp);
+    if(gi) drawRows(gi.querySelector('canvas'), rows, 3);
+    st.textContent='saved ✓  '+cur.src+'.js  '+new Date().toLocaleTimeString();
+  }catch(err){ st.textContent='✗ save failed: '+err.message; }
+}
+document.getElementById('save').addEventListener('click', save);
+document.getElementById('revert').addEventListener('click', ()=>{ grid=rowsToGrid(cur.rows); setDirty(false); paintGrid(); renderPreview(); });
+document.getElementById('clear').addEventListener('click', ()=>{ grid=blank(); setDirty(true); paintGrid(); renderPreview(); });
+window.addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey) && e.key==='s'){ e.preventDefault(); save(); } });
+
+// ---- boot ----
+(async function(){
+  buildGrid();
+  GLYPHS=await (await fetch('/api/glyphs')).json();
+  GLYPHS.sort((a,b)=>a.cp-b.cp);
+  byCp=new Map(GLYPHS.map(g=>[g.cp,g]));
+  renderList();
+  selectGlyph(byCp.has(0x69) ? 0x69 : GLYPHS[0].cp);
+})();
+</script>
+</body>
+</html>
