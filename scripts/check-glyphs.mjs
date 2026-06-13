@@ -68,7 +68,7 @@ const nGlyphs = checkSource(
 );
 const nIcons = checkSource(
   'icons.js',
-  /reg\(0x([0-9a-fA-F]+),\s*'[^']*',\s*'[^']*',\s*`\n([^`]*)`\)/g
+  /reg\(0x([0-9a-fA-F]+),\s*'[^']*',\s*'[^']*',\s*(?:\/\*[^*]*\*\/)?\s*`\n([^`]*)`\)/g
 );
 console.log(`structure: ${nGlyphs} glyphs + ${nIcons} icons checked`);
 
