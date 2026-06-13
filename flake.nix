@@ -50,6 +50,39 @@
             };
           };
 
+        # All three strikes packed into one OTB so the "Tessera Mono" family
+        # exact-matches pixelsize 16/32/48 — Xft apps (dmenu, oxwm, …) then never
+        # rescale the bitmap, which is what causes the horizontal squash at
+        # non-native sizes. Request it as `Tessera Mono:pixelsize=16|32|48`.
+        otbAll = pkgs.stdenv.mkDerivation {
+          pname = "tessera-mono-otb";
+          inherit version src;
+
+          nativeBuildInputs = [ nodejs pkgs.fonttosfnt ];
+
+          buildPhase = ''
+            runHook preBuild
+            node scripts/check-glyphs.mjs
+            node scripts/build-bdf.mjs --scale 1 --output dist/TesseraMono-1x.bdf
+            node scripts/build-bdf.mjs --scale 2 --output dist/TesseraMono-2x.bdf
+            node scripts/build-bdf.mjs --scale 3 --output dist/TesseraMono-3x.bdf
+            fonttosfnt -o TesseraMono.otb \
+              dist/TesseraMono-1x.bdf dist/TesseraMono-2x.bdf dist/TesseraMono-3x.bdf
+            runHook postBuild
+          '';
+
+          installPhase = ''
+            runHook preInstall
+            install -Dm444 TesseraMono.otb \
+              $out/share/fonts/opentype/TesseraMono.otb
+            runHook postInstall
+          '';
+
+          meta = tessera-mono.meta // {
+            description = "Tessera Mono multi-strike bitmap font — 16/32/48 px cells in one OTB";
+          };
+        };
+
         tessera-mono = pkgs.buildNpmPackage {
           pname = "tessera-mono";
           inherit version src nodejs;
@@ -92,6 +125,7 @@
       {
         packages = {
           default = tessera-mono;   # scalable TTF
+          otb = otbAll;             # 16/32/48 px strikes in one file (recommended)
           otb-1x = mkOtb 1;         # 8×16 px cell
           otb-2x = mkOtb 2;         # 16×32 px cell (1080p daily driver)
           otb-3x = mkOtb 3;         # 24×48 px cell (4k)
