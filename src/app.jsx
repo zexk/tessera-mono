@@ -1,6 +1,16 @@
 // app.jsx — Tessera Mono specimen / design doc
 
-const { useState, useEffect, useRef, useMemo } = React;
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+function useTweaks(defaults) {
+  const [values, setValues] = useState(defaults);
+  const setTweak = useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues(prev => ({ ...prev, ...edits }));
+  }, []);
+  return [values, setTweak];
+}
 
 // ─── Tweak defaults ──────────────────────────────────────────────────────────
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -74,8 +84,8 @@ function TabBar({ tabs, active, onSelect }) {
   );
 }
 
-// ─── Section nav ─────────────────────────────────────────────────────────────
-function SectionNav({ pal }) {
+// ─── Section nav + inline controls ───────────────────────────────────────────
+function SectionNav({ pal, t, setTweak }) {
   const links = [
     ['specimen','Specimen'],['atlas','Atlas'],['box','Box drawing'],
     ['math','Math'],['icons','Icons'],['nerd','Nerd Fonts'],
@@ -83,9 +93,46 @@ function SectionNav({ pal }) {
   ];
   return (
     <nav className="section-nav" style={{ background: pal.bg, borderBottomColor: pal.rule }}>
-      {links.map(([id, label]) => (
-        <a key={id} href={'#' + id} style={{ color: pal.muted }}>{label}</a>
-      ))}
+      <div className="nav-links">
+        {links.map(([id, label]) => (
+          <a key={id} href={'#' + id} style={{ color: pal.muted }}>{label}</a>
+        ))}
+      </div>
+      <div className="nav-controls">
+        <div className="nav-ctrl-grp">
+          {[{v:0,l:'reg'},{v:1,l:'bold'},{v:2,l:'xbold'}].map(({v,l}) => (
+            <button key={v} className={'nav-ctrl-btn' + (t.weight===v ? ' on' : '')}
+              onClick={() => setTweak('weight', v)}>{l}</button>
+          ))}
+        </div>
+        <div className="nav-sep" />
+        <div className="nav-ctrl-grp">
+          <span className="nav-ctrl-lbl">round</span>
+          <input type="range" className="nav-ctrl-range" min="0" max="1" step="0.1"
+            value={t.rounding} onChange={e => setTweak('rounding', +e.target.value)} />
+          <span className="nav-ctrl-val">{t.rounding}</span>
+        </div>
+        <div className="nav-sep" />
+        <div className="nav-ctrl-grp">
+          {Object.keys(PALETTES).map(mode => (
+            <button key={mode} className="nav-mode" title={mode}
+              style={{
+                background: PALETTES[mode].accent,
+                boxShadow: t.mode===mode
+                  ? `0 0 0 1.5px ${pal.bg}, 0 0 0 3px ${pal.accent}`
+                  : 'none'
+              }}
+              onClick={() => setTweak('mode', mode)} />
+          ))}
+        </div>
+        <div className="nav-sep" />
+        <div className="nav-ctrl-grp">
+          <button className={'nav-ctrl-btn' + (t.ligatures ? ' on' : '')}
+            onClick={() => setTweak('ligatures', !t.ligatures)}>lig</button>
+          <button className={'nav-ctrl-btn' + (t.alts ? ' on' : '')}
+            onClick={() => setTweak('alts', !t.alts)}>alt</button>
+        </div>
+      </div>
     </nav>
   );
 }
@@ -1078,28 +1125,6 @@ function Ligatures({ pal, weight, rounding, ligatures, alts }) {
   );
 }
 
-// ─── Tweaks panel ────────────────────────────────────────────────────────────
-function Tweaks({ t, setTweak }) {
-  return (
-    <TweaksPanel title="Tweaks">
-      <TweakSection label="Render" />
-      <TweakRadio label="Weight" value={t.weight}
-        options={[{value:0,label:'reg'},{value:1,label:'bold'},{value:2,label:'xbold'}]}
-        onChange={(v) => setTweak('weight', v)} />
-      <TweakSlider label="Rounding" value={t.rounding} min={0} max={1} step={0.1}
-        onChange={(v) => setTweak('rounding', v)} />
-      <TweakRadio label="Mode" value={t.mode}
-        options={[{value:'noir',label:'noir'},{value:'paper',label:'paper'},{value:'amber',label:'amber'},{value:'phosphor',label:'phos'}]}
-        onChange={(v) => setTweak('mode', v)} />
-      <TweakSection label="OpenType" />
-      <TweakToggle label="Ligatures" value={t.ligatures}
-        onChange={(v) => setTweak('ligatures', v)} />
-      <TweakToggle label="Alternates" value={t.alts}
-        onChange={(v) => setTweak('alts', v)} />
-    </TweaksPanel>
-  );
-}
-
 // ─── App root ────────────────────────────────────────────────────────────────
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -1118,7 +1143,7 @@ function App() {
 
   return (
     <div className="app">
-      <SectionNav pal={pal} />
+      <SectionNav pal={pal} t={t} setTweak={setTweak} />
       <Hero pal={pal} weight={t.weight} rounding={t.rounding} />
       <Specimen pal={pal} weight={t.weight} rounding={t.rounding}
         specimenPx={t.specimenPx} setTweak={setTweak} text={t.specimenText}
@@ -1136,7 +1161,6 @@ function App() {
         <div style={{ color: pal.muted }}>Design specimen — built on the bitmap, rendered as paths.</div>
       </footer>
 
-      <Tweaks t={t} setTweak={setTweak} />
     </div>
   );
 }

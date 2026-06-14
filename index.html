@@ -269,20 +269,52 @@
   /* ─── Section nav ────────────────────────────────────────────────────── */
   .section-nav {
     position: sticky; top: 0; z-index: 10;
-    display: flex; overflow-x: auto; gap: 0;
+    display: flex; align-items: stretch; min-width: 0;
     background: var(--bg); border-bottom: 1px solid var(--rule);
-    padding: 0; margin: 0 -48px 36px; padding: 0 48px;
+    margin: 0 -48px 36px; padding: 0 48px;
+  }
+  .nav-links {
+    display: flex; overflow-x: auto; gap: 0; flex: 1; min-width: 0;
     scrollbar-width: none;
   }
-  .section-nav::-webkit-scrollbar { display: none; }
-  .section-nav a {
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a {
     font-family: var(--mono-font); font-size: 11px; letter-spacing: .04em;
     text-transform: uppercase; white-space: nowrap;
     padding: 10px 14px; text-decoration: none; color: var(--muted);
     border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: color 120ms;
+    transition: color 120ms; display: block;
   }
-  .section-nav a:hover { color: var(--ink); }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-controls {
+    display: flex; align-items: center; gap: 10px; flex: none;
+    padding-left: 14px; border-left: 1px solid var(--rule);
+  }
+  .nav-ctrl-grp { display: flex; align-items: center; gap: 3px; }
+  .nav-ctrl-btn {
+    font-family: var(--mono-font); font-size: 9px; letter-spacing: .05em;
+    text-transform: uppercase; padding: 3px 6px; white-space: nowrap;
+    border: 1px solid var(--rule); background: transparent;
+    color: var(--muted); cursor: pointer; transition: all 100ms;
+  }
+  .nav-ctrl-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .nav-ctrl-btn.on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+  .nav-ctrl-lbl {
+    font-family: var(--mono-font); font-size: 9px; color: var(--muted);
+    letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  }
+  .nav-ctrl-val {
+    font-family: var(--mono-font); font-size: 9px; color: var(--muted);
+    min-width: 14px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .nav-ctrl-range { width: 52px; accent-color: var(--accent); cursor: pointer; }
+  .nav-mode {
+    width: 13px; height: 13px; border-radius: 50%; cursor: pointer;
+    border: none; padding: 0; flex: none; transition: transform 100ms, box-shadow 100ms;
+  }
+  .nav-mode:hover { transform: scale(1.25); }
+  .nav-sep { width: 1px; height: 14px; background: var(--rule); margin: 0 1px; flex: none; }
+  @media (max-width: 880px) { .nav-controls { display: none; } }
 
   /* ─── Tab bar ────────────────────────────────────────────────────────── */
   .tab-bar {
@@ -317,7 +349,6 @@
 
   <script src="src/glyphs.js"></script>
   <script src="src/icons.js"></script>
-  <script type="text/babel" src="src/tweaks-panel.jsx"></script>
   <script type="text/babel" src="src/renderer.jsx"></script>
   <script type="text/babel" src="src/app.jsx"></script>
 </body>
