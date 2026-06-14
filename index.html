@@ -258,6 +258,54 @@
     .section-hd { grid-template-columns: 1fr; gap: 8px; }
     .hero-stats { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ─── Tighter spacing ────────────────────────────────────────────────── */
+  .app { padding: 0 48px 80px; }
+  .section { padding: 24px 0; }
+  .section-body { gap: 18px; }
+  .hero { gap: 20px; padding-bottom: 28px; margin-bottom: 28px; }
+  .hero-bottom { gap: 28px; }
+
+  /* ─── Section nav ────────────────────────────────────────────────────── */
+  .section-nav {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; overflow-x: auto; gap: 0;
+    background: var(--bg); border-bottom: 1px solid var(--rule);
+    padding: 0; margin: 0 -48px 36px; padding: 0 48px;
+    scrollbar-width: none;
+  }
+  .section-nav::-webkit-scrollbar { display: none; }
+  .section-nav a {
+    font-family: var(--mono-font); font-size: 11px; letter-spacing: .04em;
+    text-transform: uppercase; white-space: nowrap;
+    padding: 10px 14px; text-decoration: none; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color 120ms;
+  }
+  .section-nav a:hover { color: var(--ink); }
+
+  /* ─── Tab bar ────────────────────────────────────────────────────────── */
+  .tab-bar {
+    display: flex; overflow-x: auto; gap: 0;
+    border-bottom: 1px solid var(--rule); margin-bottom: 18px;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    font-family: var(--mono-font); font-size: 11px; letter-spacing: .03em;
+    white-space: nowrap; padding: 7px 14px; background: transparent;
+    border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    color: var(--muted); cursor: pointer; transition: color 120ms;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab-on { color: var(--ink) !important; border-bottom-color: var(--ink) !important; }
+
+  /* ─── Horizontal card scroll ─────────────────────────────────────────── */
+  .h-card-row {
+    display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;
+    scrollbar-width: thin;
+  }
+  .h-card-row .cov-card { flex: none; width: 220px; }
 </style>
 </head>
 <body>

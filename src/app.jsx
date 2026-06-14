@@ -61,6 +61,35 @@ const PALETTES = {
   }
 };
 
+// ─── Tab bar ─────────────────────────────────────────────────────────────────
+function TabBar({ tabs, active, onSelect }) {
+  return (
+    <div className="tab-bar">
+      {tabs.map((t, i) => (
+        <button key={i} className={'tab' + (active === i ? ' tab-on' : '')} onClick={() => onSelect(i)}>
+          {t}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Section nav ─────────────────────────────────────────────────────────────
+function SectionNav({ pal }) {
+  const links = [
+    ['specimen','Specimen'],['atlas','Atlas'],['box','Box drawing'],
+    ['math','Math'],['icons','Icons'],['nerd','Nerd Fonts'],
+    ['specs','System'],['lig','Ligatures'],
+  ];
+  return (
+    <nav className="section-nav" style={{ background: pal.bg, borderBottomColor: pal.rule }}>
+      {links.map(([id, label]) => (
+        <a key={id} href={'#' + id} style={{ color: pal.muted }}>{label}</a>
+      ))}
+    </nav>
+  );
+}
+
 // ─── Section header ──────────────────────────────────────────────────────────
 function Section({ id, num, title, sub, children, accent }) {
   return (
@@ -209,15 +238,21 @@ function Atlas({ pal, weight, rounding, alts }) {
   ];
   const dia = Object.keys(TESSERA.DIACRITICS).map(k => +k);
 
+  const groups = [
+    { title: 'Uppercase',   codepoints: upper },
+    { title: 'Lowercase',   codepoints: lower },
+    { title: 'Digits',      codepoints: digits },
+    { title: 'Punctuation', codepoints: [...punct1, ...punct2] },
+    { title: 'Extended',    codepoints: ext },
+    { title: 'Diacritics',  codepoints: dia },
+  ];
+  const [tab, setTab] = useState(0);
+
   return (
     <Section id="atlas" num="02" title="Atlas" accent={pal.accent}
-      sub="Every glyph on its 8×16 grid. Outside corners round when rounding is dialed up; bold dilates one pixel right (extra-bold also down).">
-      <AtlasGroup title="Uppercase" codepoints={upper} pal={pal} weight={weight} rounding={rounding} alts={alts} />
-      <AtlasGroup title="Lowercase" codepoints={lower} pal={pal} weight={weight} rounding={rounding} alts={alts} />
-      <AtlasGroup title="Digits" codepoints={digits} pal={pal} weight={weight} rounding={rounding} alts={alts} />
-      <AtlasGroup title="Punctuation & symbols" codepoints={[...punct1, ...punct2]} pal={pal} weight={weight} rounding={rounding} alts={alts} />
-      <AtlasGroup title="Extended Latin (selection)" codepoints={ext} pal={pal} weight={weight} rounding={rounding} alts={alts} />
-      <AtlasGroup title="Diacritic composites" codepoints={dia} pal={pal} weight={weight} rounding={rounding} alts={alts} />
+      sub="Every glyph on its 8×16 grid. Rounding clips outside corners; bold dilates one pixel.">
+      <TabBar tabs={groups.map(g => `${g.title} · ${g.codepoints.length}`)} active={tab} onSelect={setTab} />
+      <AtlasGroup {...groups[tab]} pal={pal} weight={weight} rounding={rounding} alts={alts} />
     </Section>
   );
 }
@@ -373,7 +408,7 @@ function NerdRoadmap({ pal }) {
 
   return (
     <Section id="nerd" num="06" title="Nerd Fonts coverage" accent={pal.accent}
-      sub={`Targeting full Nerd Fonts v3 glyphset. ${total.toLocaleString()} codepoints across ${NERD_CATEGORIES.length} sources. Each grid below is one cell per codepoint — lit when drawn, dim when pending. Phased so terminal essentials ship first.`}>
+      sub={`${total.toLocaleString()} codepoints across ${NERD_CATEGORIES.length} sources — one cell per codepoint, lit when drawn. Terminal essentials first.`}>
       <div className="cov-summary" style={{ background: pal.panel, borderColor: pal.rule }}>
         <div className="cov-summary-l">
           <span className="cov-num">{drawn.toLocaleString()}</span>
@@ -400,7 +435,7 @@ function NerdRoadmap({ pal }) {
                 {phaseDrawn.toLocaleString()} / {phaseTotal.toLocaleString()} across {cats.length} sets
               </span>
             </div>
-            <div className="cov-cards">
+            <div className="h-card-row">
               {cats.map(c => {
                 const cnt = rangeCount(c);
                 const drw = rangeDrawn(c);
@@ -759,70 +794,72 @@ function IconsPowerline({ pal, mode, weight, rounding }) {
     'Files', 'Actions', 'Status', 'Symbols', 'Hardware', 'Places', 'People', 'Logos'
   ];
 
+  const [tab, setTab] = useState(0);
+
   return (
     <Section id="icons" num="05" title="Powerline & icons" accent={pal.accent}
-      sub="Phase-0 Nerd Fonts coverage drawn so far — Powerline separators, IEC power symbols, and ~25 Font Awesome essentials. Same 8×16 cell as the Latin set: no special bearings, no overflow.">
+      sub="Phase-0 Nerd Fonts icons — Powerline, IEC power symbols, Pomicons, Codicons, Seti. Same 8×16 cell.">
+      <TabBar tabs={['Powerline', 'Starship', 'Icon atlas']} active={tab} onSelect={setTab} />
 
-      {/* Iconic colored prompt bars */}
-      <div className="pl-stage" style={{ background: pal.panel, borderColor: pal.rule, border: '1px solid', padding: 24, display: 'flex', flexDirection: 'column', gap: 18, overflowX: 'auto' }}>
-        <div className="box-panel-label" style={{ color: pal.muted }}>powerline prompts — colored segments connected by U+E0B0 separators</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {prompts.map((p, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <PowerlineBar segments={p.segs} pageBg={pal.panel} px={2} weight={weight} rounding={rounding} />
-              <span style={{ fontFamily: 'var(--mono-font)', fontSize: 10, color: pal.muted, letterSpacing: '.04em', textTransform: 'uppercase' }}>{p.label}</span>
-            </div>
-          ))}
+      {tab === 0 && <>
+        <div style={{ background: pal.panel, borderColor: pal.rule, border: '1px solid', padding: 24, display: 'flex', flexDirection: 'column', gap: 18, overflowX: 'auto' }}>
+          <div className="box-panel-label" style={{ color: pal.muted }}>powerline prompts — colored segments connected by U+E0B0 separators</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {prompts.map((p, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <PowerlineBar segments={p.segs} pageBg={pal.panel} px={2} weight={weight} rounding={rounding} />
+                <span style={{ fontFamily: 'var(--mono-font)', fontSize: 10, color: pal.muted, letterSpacing: '.04em', textTransform: 'uppercase' }}>{p.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+        <div style={{ background: pal.panel, borderColor: pal.rule, border: '1px solid', padding: 24 }}>
+          <div className="box-panel-label" style={{ color: pal.muted, marginBottom: 16 }}>separator family — U+E0B0…E0B3 at 10×</div>
+          <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {separatorRow.map(s => (
+              <div key={s.cp} style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                <GlyphCell cp={s.cp} px={10} bold={weight} rounding={rounding}
+                  ink={pal.ink} paper={pal.panel} grid={pal.grid} baseline={pal.baseline} label={false} />
+                <div style={{ fontFamily: 'var(--mono-font)', fontSize: 10, color: pal.muted, textAlign: 'center', lineHeight: 1.5 }}>
+                  <div style={{ color: pal.ink }}>U+{s.cp.toString(16).toUpperCase()}</div>
+                  <div>{s.name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>}
 
-      {/* Separators large */}
-      <div style={{ background: pal.panel, borderColor: pal.rule, border: '1px solid', padding: 24 }}>
-        <div className="box-panel-label" style={{ color: pal.muted, marginBottom: 16 }}>separator family — U+E0B0…E0B3 at 10×</div>
-        <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          {separatorRow.map(s => (
-            <div key={s.cp} style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-              <GlyphCell cp={s.cp} px={10} bold={weight} rounding={rounding}
-                ink={pal.ink} paper={pal.panel} grid={pal.grid} baseline={pal.baseline} label={false} />
-              <div style={{ fontFamily: 'var(--mono-font)', fontSize: 10, color: pal.muted, textAlign: 'center', lineHeight: 1.5 }}>
-                <div style={{ color: pal.ink }}>U+{s.cp.toString(16).toUpperCase()}</div>
-                <div>{s.name}</div>
+      {tab === 1 && <StarshipCard pal={pal} mode={mode} weight={weight} rounding={rounding} />}
+
+      {tab === 2 &&
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {groupOrder.filter(g => byGroup[g]).map(group => (
+            <div key={group} className="atlas-group">
+              <div className="atlas-group-hd">
+                <span className="atlas-group-title">{group}</span>
+                <span className="atlas-group-count" style={{ color: pal.muted }}>{byGroup[group].length} drawn</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+                {byGroup[group].map(cp => {
+                  const info = TESSERA.ICONS[cp];
+                  const hex = cp.toString(16).toUpperCase().padStart(4, '0');
+                  return (
+                    <div key={cp} style={{ display: 'flex', gap: 12, alignItems: 'center', border: '1px solid', borderColor: pal.rule, padding: '10px 12px', background: pal.panel }}>
+                      <GlyphCell cp={cp} px={5} bold={weight} rounding={rounding}
+                        ink={pal.ink} paper={pal.bg} grid={pal.grid} label={false} />
+                      <div style={{ fontFamily: 'var(--mono-font)', fontSize: 10, lineHeight: 1.5, display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                        <span style={{ color: pal.ink, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{info.name}</span>
+                        <span style={{ color: pal.muted }}>U+{hex}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Starship prompts */}
-      <StarshipCard pal={pal} mode={mode} weight={weight} rounding={rounding} />
-
-      {/* Icon atlas grouped */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-        {groupOrder.filter(g => byGroup[g]).map(group => (
-          <div key={group} className="atlas-group">
-            <div className="atlas-group-hd">
-              <span className="atlas-group-title">{group}</span>
-              <span className="atlas-group-count" style={{ color: pal.muted }}>{byGroup[group].length} drawn</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-              {byGroup[group].map(cp => {
-                const info = TESSERA.ICONS[cp];
-                const hex = cp.toString(16).toUpperCase().padStart(4, '0');
-                return (
-                  <div key={cp} style={{ display: 'flex', gap: 12, alignItems: 'center', border: '1px solid', borderColor: pal.rule, padding: '10px 12px', background: pal.panel }}>
-                    <GlyphCell cp={cp} px={5} bold={weight} rounding={rounding}
-                      ink={pal.ink} paper={pal.bg} grid={pal.grid} label={false} />
-                    <div style={{ fontFamily: 'var(--mono-font)', fontSize: 10, lineHeight: 1.5, display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                      <span style={{ color: pal.ink, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{info.name}</span>
-                      <span style={{ color: pal.muted }}>U+{hex}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      }
     </Section>
   );
 }
@@ -955,13 +992,6 @@ function Specs({ pal, weight, rounding, setTweak }) {
             <li><b>WOFF2</b> — for the web specimen + editors.</li>
           </ul>
           <p style={{ color: pal.muted, marginTop: 12 }}>The TTF is generated from the bitmap by tracing each cell as a single path — the same algorithm this page uses to draw. The ROND axis is a renderer-side parameter, exposed as a custom OT axis.</p>
-          <a href="build-ttf.html" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            fontFamily: 'var(--mono-font)', fontSize: 11, letterSpacing: '.04em',
-            textTransform: 'uppercase', textDecoration: 'none',
-            padding: '8px 14px', marginTop: 4, alignSelf: 'flex-start',
-            background: pal.ink, color: pal.bg
-          }}>▸ Open the TTF builder</a>
         </div>
 
         <div className="spec-card" style={{ background: pal.panel, borderColor: pal.rule }}>
@@ -1088,6 +1118,7 @@ function App() {
 
   return (
     <div className="app">
+      <SectionNav pal={pal} />
       <Hero pal={pal} weight={t.weight} rounding={t.rounding} />
       <Specimen pal={pal} weight={t.weight} rounding={t.rounding}
         specimenPx={t.specimenPx} setTweak={setTweak} text={t.specimenText}
@@ -1102,11 +1133,7 @@ function App() {
 
       <footer className="footer">
         <div>Tessera Mono · 8 × 16 · v0.1.0-draft</div>
-        <div style={{ color: pal.muted }}>
-          <a href="build-ttf.html" style={{ color: pal.accent, textDecoration: 'none', borderBottom: `1px solid ${pal.accent}`, paddingBottom: 1 }}>▸ Build TTF
-          </a>
-          <span style={{ marginLeft: 14 }}>Design specimen — built on the bitmap, rendered as paths.</span>
-        </div>
+        <div style={{ color: pal.muted }}>Design specimen — built on the bitmap, rendered as paths.</div>
       </footer>
 
       <Tweaks t={t} setTweak={setTweak} />
