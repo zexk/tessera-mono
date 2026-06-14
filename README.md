@@ -15,7 +15,6 @@ tessera-mono/
 ├── flake.nix                  # Nix devShell + font package
 ├── package.json               # Node scripts
 ├── index.html                 # Type specimen (entry point)
-├── build-ttf.html             # Browser-based TTF builder (legacy)
 ├── src/
 │   ├── glyphs.js              # Bitmap glyph data (IIFE → globalThis.TESSERA)
 │   ├── icons.js               # Powerline + Nerd Font icons
@@ -23,9 +22,11 @@ tessera-mono/
 │   ├── tweaks-panel.jsx       # Reusable tweak controls
 │   └── app.jsx                # Specimen app
 ├── scripts/
-│   ├── build-font.mjs         # Node script: traces bitmaps → TTF via opentype.js
+│   ├── edit-server.mjs        # Browser-based glyph editor (zero-dep HTTP server)
+│   ├── editor.html            # Editor UI (pixel grid, Nerd Font reference pane)
+│   ├── build-font.mjs         # Traces bitmaps → TTF via opentype.js
 │   ├── check-glyphs.mjs       # Glyph lint: structure + vertical alignment
-│   └── bdf2js.mjs             # Read edited BDF back into JS source
+│   └── bdf2js.mjs             # Import edited BDF back into JS source
 ├── dist/
 │   └── TesseraMono-Regular.ttf  # Built font (80 KB, 565 glyphs)
 └── screenshots/
@@ -36,7 +37,7 @@ tessera-mono/
 ### Nix (recommended)
 
 ```bash
-nix develop        # enter dev shell with node, gbdfed, otf2bdf, ripgrep
+nix develop        # enter dev shell with node, otf2bdf, ripgrep
 npm run build:font  # lint glyphs + build the TTF from source
 npm run check       # lint only: row structure, duplicates, alignment
 ```
@@ -82,67 +83,60 @@ The specimen lets you toggle weight, rounding, color themes, ligatures, and view
 
 ## Editing glyphs
 
-The recommended workflow uses **gbdfed** — a bitmap font editor that works directly with BDF files.
-
-### One-shot edit
+The recommended workflow uses the built-in browser editor — no external tools required.
 
 ```bash
-nix develop
-npm run edit
+npm run edit:web    # start editor at http://localhost:8009
 ```
 
-This runs the full cycle: `build:font → edit:bdf → gbdfed → edit:import → build:font`.
-
-1. Builds the TTF from source
-2. Converts it to BDF format via `otf2bdf`
-3. Opens `gbdfed` with the BDF file — edit pixels on the 8×16 grid, save
-4. Imports your changes back into `src/glyphs.js` and `src/icons.js`
-5. Rebuilds the TTF
-
-### Manual step-by-step
+Then open the URL in a browser. Pick a glyph from the sidebar, paint the 8×16 grid, and save. Changes write directly into `src/glyphs.js` or `src/icons.js`; rebuild the font afterward:
 
 ```bash
-npm run build:font      # 1. Build TTF
-npm run edit:bdf        # 2. Export to BDF (dist/TesseraMono-edit.bdf)
-gbdfed dist/TesseraMono-edit.bdf   # 3. Edit, save
-npm run edit:import     # 4. Import changes to src/
-npm run build:font      # 5. Rebuild TTF
+npm run build:font
 ```
 
-### Preview without writing
+### Editor features
 
-```bash
-node scripts/bdf2js.mjs --input dist/TesseraMono-edit.bdf --dry-run
-```
-
-### What gbdfed shows
-
-- **Glyph grid** — each glyph on its 8×16 pixel grid
-- **Hex codepoint labels** — U+0041, U+E0B0, etc.
-- **Navigation** — arrow keys between glyphs
-- **Drawing** — click to toggle pixels
-- **Metrics** — BBX, advance width, DWIDTH visible in the info panel
+- **Sidebar** — filter by character, hex codepoint (`69`, `e0b0`), or name (`git`, `arrow`); scope buttons narrow to Latin / Icons / All
+- **Pixel grid** — left-click draws, right-click erases, drag to paint
+- **Nerd Font reference pane** — press `r` or click ⧉ NF ref to open a side-by-side reference rendered from the installed Nerd Font (auto-detected from `$NERD_FONT_DIR` or `~/.nix-profile`)
+- **Save** — `⌘/Ctrl+S` or the Save button; writes only the changed glyph block, leaves the rest of the file untouched
+- **Revert / Clear** — undo unsaved edits or wipe the glyph
 
 ### Which glyphs can be edited
 
-- All hand-drawn glyphs in `glyphs.js` (Basic Latin, Latin-1 supplement, math, arrows, dingbats)
-- All icon glyphs in `icons.js` (Powerline, Codicons, Octicons, Font Awesome, etc.)
+- All hand-drawn glyphs in `src/glyphs.js` (Basic Latin, Latin-1 supplement, math, arrows, dingbats)
+- All icon glyphs in `src/icons.js` (Powerline, Codicons, Octicons, Font Awesome, etc.)
 
-The following are **algorithmic** and cannot be edited through BDF (they regenerate at build time):
+The following are **algorithmic** and regenerate at build time — editing them has no effect:
 - Box drawing characters (U+2500–U+257F)
 - Block elements (U+2580–U+259F)
 - Diacritic composites (À, é, ñ, etc. — built from base + accent overlay)
 
+### BDF round-trip (legacy)
+
+The old gbdfed-based workflow is still available if you need it:
+
+```bash
+npm run build:font                         # 1. build TTF
+npm run edit:bdf                           # 2. export to dist/TesseraMono-edit.bdf
+gbdfed dist/TesseraMono-edit.bdf           # 3. edit in gbdfed, save
+npm run edit:import                        # 4. import changes back to src/
+npm run build:font                         # 5. rebuild
+```
+
+Or as a single command: `npm run edit` (requires `gbdfed` and `otf2bdf` in `PATH`).
+
 ## Build pipeline
 
 ```
-src/glyphs.js ──┐
-src/icons.js  ──┤
+  edit:web (browser pixel editor)
+  └─ paint glyph → Save → writes directly to src/
+                                    │
+src/glyphs.js ──┐                   │
+src/icons.js  ──┤ ◄─────────────────┘
                 ▼
       build-font.mjs ──→ dist/TesseraMono-Regular.ttf
-              │
-              ▼
-        otf2bdf ──→ .bdf ──→ gbdfed (edit) ──→ bdf2js.mjs ──→ src/
 ```
 
 ## License

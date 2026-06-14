@@ -269,7 +269,7 @@ function BoxDemo({ pal, weight, rounding }) {
     '│ │ ▾ assets/           │ │ ascend  desc  2  │ │',
     '│ │   logo.svg          │ │ ─────────────────│ │',
     '│ ╰─────────────────────╯ ╰──────────────────╯ │',
-    '│ ░▒▓██▓▒░  ◆ ready  ◆ 3 axes  ◆ 95 glyphs    │',
+    '│ ░▒▓██▓▒░  ◆ ready  ◆ 3 axes  ◆ 95 glyphs     │',
     '└──────────────────────────────────────────────┘'
   ].join('\n');
 
@@ -1033,14 +1033,14 @@ function Ligatures({ pal, weight, rounding, ligatures, alts }) {
         {LIGATURES.map((l, i) => (
           <div key={i} className="lig-row" style={{ borderColor: pal.rule, background: pal.panel }}>
             <div className="lig-from">
-              <TextRun text={l.a} px={6} bold={weight} rounding={rounding} ink={pal.ink} paper={pal.panel} />
+              <TextRun text={l.a} px={3} bold={weight} rounding={rounding} ink={pal.ink} paper={pal.panel} />
               <span style={{ color: pal.muted }}>raw</span>
             </div>
             <div className="lig-arrow" style={{ color: ligatures ? pal.accent : pal.muted }}>
               {ligatures ? '→' : '·'}
             </div>
             <div className="lig-to" style={{ opacity: ligatures ? 1 : 0.35 }}>
-              <TextRun text={l.b} px={6} bold={weight} rounding={rounding} ink={pal.ink} paper={pal.panel} />
+              <TextRun text={l.b} px={3} bold={weight} rounding={rounding} ink={pal.ink} paper={pal.panel} />
               <span style={{ color: pal.muted }}>ligature</span>
             </div>
           </div>
