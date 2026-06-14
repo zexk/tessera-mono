@@ -9,6 +9,7 @@
     --bg:#14151a; --panel:#1b1d24; --line:#2a2d36; --ink:#e8e6df; --dim:#7c818c;
     --accent:#e0a05a; --cap:#5a8fe0; --x:#5ad08a; --base:#e0625a; --desc:#a87ad8;
     --on:#e8e6df; --off:#23262f;
+    --px:26px;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex;
@@ -29,21 +30,23 @@
   .gi canvas{image-rendering:pixelated}
   .gi .cp{font-size:9px;color:var(--dim)}
   /* main */
-  #main{flex:1;overflow:auto;padding:20px 26px;display:flex;flex-direction:column;gap:16px}
-  #title{display:flex;align-items:baseline;gap:12px}
+  #main{flex:1;overflow:auto;padding:20px 26px;display:flex;flex-direction:column;gap:12px}
+  #title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   #title .ch{font-size:22px;line-height:1}
   #title .cp{color:var(--ink)}
   #title .lab{color:var(--dim)}
   #dirty{color:var(--accent);visibility:hidden;font-size:11px}
+  #pxinfo{font-size:10px;color:var(--dim);margin-left:4px}
   .legend{display:flex;gap:16px;font-size:10px;color:var(--dim);flex-wrap:wrap}
   .legend i{font-style:normal;border-bottom:2px solid;padding-bottom:1px}
   #editor{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap}
   /* edit grid */
-  #grid{display:grid;grid-template-columns:34px repeat(8,26px);user-select:none}
+  #gridwrap{display:flex;flex-direction:column;gap:6px}
+  #grid{display:grid;grid-template-columns:34px repeat(8,var(--px));user-select:none}
   #grid .col{display:flex;align-items:flex-end;justify-content:center;height:18px;font-size:9px;color:var(--dim)}
-  #grid .rl{display:flex;align-items:center;justify-content:flex-end;gap:5px;height:26px;padding-right:7px;font-size:9px;color:var(--dim)}
+  #grid .rl{display:flex;align-items:center;justify-content:flex-end;gap:5px;height:var(--px);padding-right:7px;font-size:9px;color:var(--dim)}
   #grid .rl b{color:var(--accent)}
-  .px{width:26px;height:26px;border:1px solid #20232b;background:var(--off);cursor:crosshair}
+  .px{width:var(--px);height:var(--px);border:1px solid #20232b;background:var(--off);cursor:crosshair}
   .px.on{background:var(--on)}
   .px.cap{border-top-color:var(--cap)}
   .px.xt{border-top-color:var(--x)}
@@ -51,17 +54,28 @@
   .px.desc{border-bottom-color:var(--desc)}
   .px.cap,.px.xt{border-top-width:2px}
   .px.base,.px.desc{border-bottom-width:2px}
+  /* tools bar */
+  #tools{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
+  .tg{display:flex;gap:2px}
+  .tsep{width:1px;height:18px;background:var(--line);margin:0 3px;flex:none}
+  .tspacer{flex:1}
+  .ti{font:inherit;color:var(--dim);background:var(--off);border:1px solid var(--line);padding:3px 7px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1.2}
+  .ti:hover{color:var(--ink);border-color:var(--accent)}
+  .ti:disabled{opacity:.3;cursor:default;pointer-events:none}
   /* right column */
   #right{display:flex;flex-direction:column;gap:14px;min-width:200px}
   .prev{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
   .prev h2{margin:0 0 9px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
   .prev canvas{image-rendering:pixelated;display:block;background:#0d0e12;border-radius:3px}
+  #ctx-wrap{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  #ctx-input{flex:1;padding:4px 7px;background:var(--bg);border:1px solid var(--line);border-radius:5px;color:var(--ink);font:inherit;font-size:11px}
+  #ctx-input:focus{outline:none;border-color:var(--accent)}
   #btns{display:flex;gap:8px}
   button{font:inherit;color:var(--ink);background:#262a33;border:1px solid var(--line);padding:9px 16px;border-radius:6px;cursor:pointer}
   button:hover{border-color:var(--accent)}
   button.primary{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
-  #status{min-height:16px;font-size:12px;color:var(--dim)}
-  /* nerd-font reference (togglable split pane) */
+  #status{min-height:16px;font-size:11px;color:var(--dim)}
+  /* nerd-font reference */
   @font-face{font-family:'NFRef';src:url('/api/nerdfont');font-display:swap}
   #reftoggle{margin-left:auto;font-size:11px;padding:6px 12px}
   #reftoggle.on{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
@@ -110,6 +124,7 @@
       <span class="cp" id="t-cp"></span>
       <span class="lab" id="t-lab"></span>
       <span id="dirty">● unsaved</span>
+      <span id="pxinfo"></span>
       <button id="reftoggle" title="toggle Nerd Font reference (r)">⧉ NF ref</button>
     </div>
     <div class="legend">
@@ -119,16 +134,63 @@
       <i style="border-color:var(--desc)">descender · r12</i>
     </div>
     <div id="editor">
-      <div id="grid"></div>
+      <div id="gridwrap">
+        <div id="grid"></div>
+        <div id="tools">
+          <div class="tg">
+            <button class="ti" data-xf="shiftLeft"  title="shift left · Alt+←">←</button>
+            <button class="ti" data-xf="shiftRight" title="shift right · Alt+→">→</button>
+            <button class="ti" data-xf="shiftUp"    title="shift up · Alt+↑">↑</button>
+            <button class="ti" data-xf="shiftDown"  title="shift down · Alt+↓">↓</button>
+          </div>
+          <div class="tsep"></div>
+          <div class="tg">
+            <button class="ti" data-xf="flipH" title="flip horizontal · H">↔</button>
+            <button class="ti" data-xf="flipV" title="flip vertical · V">↕</button>
+          </div>
+          <div class="tsep"></div>
+          <div class="tg">
+            <button class="ti" data-xf="rotCCW" title="rotate 90° CCW">↺</button>
+            <button class="ti" data-xf="rot180" title="rotate 180°">180</button>
+            <button class="ti" data-xf="rotCW"  title="rotate 90° CW">↻</button>
+          </div>
+          <div class="tsep"></div>
+          <div class="tg">
+            <button class="ti" data-xf="transpose" title="transpose · T">⊹</button>
+            <button class="ti" data-xf="invert"    title="invert pixels · I">¬</button>
+          </div>
+          <div class="tsep"></div>
+          <div class="tg">
+            <button class="ti" id="undo-btn" title="undo · Ctrl+Z" disabled>↩</button>
+            <button class="ti" id="redo-btn" title="redo · Ctrl+Y" disabled>↪</button>
+          </div>
+          <div class="tspacer"></div>
+          <div class="tg">
+            <button class="ti" id="zoom-out" title="zoom out · −">−</button>
+            <button class="ti" id="zoom-in"  title="zoom in · =">+</button>
+          </div>
+        </div>
+      </div>
       <div id="right">
-        <div class="prev"><h2>glyph</h2><canvas id="pv1"></canvas></div>
-        <div class="prev"><h2>in context</h2><canvas id="pv2"></canvas></div>
+        <div class="prev">
+          <h2>glyph</h2>
+          <canvas id="pv1"></canvas>
+        </div>
+        <div class="prev">
+          <div id="ctx-wrap">
+            <h2 style="margin:0">in context</h2>
+            <input id="ctx-input" autocomplete="off" spellcheck="false">
+          </div>
+          <canvas id="pv2"></canvas>
+        </div>
         <div id="btns">
           <button class="primary" id="save">Save</button>
           <button id="revert">Revert</button>
           <button id="clear">Clear</button>
+          <button id="copy-btn" title="copy grid · Ctrl+C">Copy</button>
+          <button id="paste-btn" title="paste grid · Ctrl+V" disabled>Paste</button>
         </div>
-        <div id="status">left-click draws · right-click erases · drag to paint · ⌘/Ctrl+S saves</div>
+        <div id="status">draw · right-click erases · [/] prev/next · Ctrl+S saves</div>
       </div>
     </div>
   </div>
@@ -149,12 +211,89 @@
 const W=8, H=16, CAP=2, XT=4, BASE=10, DESC=12;
 let GLYPHS=[], byCp=new Map(), cur=null, grid=blank(), dirty=false, scope='glyphs';
 let refOn=false, refStart=0, refEnd=0;
+let clipboard=null;
 
+// ---- grid state helpers ----
 function blank(){ return Array.from({length:H}, ()=>Array(W).fill(false)); }
 function rowsToGrid(rows){ return rows.map(r=>[...r].map(c=>c==='#')); }
 function gridToRows(g){ return g.map(row=>row.map(v=>v?'#':'.').join('')); }
-const chOf = cp => cp>=0x21 ? String.fromCodePoint(cp) : '';          // for codePointAt / preview
-const dispCh = cp => (cp>=0x21 && cp<0xE000) ? String.fromCodePoint(cp) : ''; // hide PUA tofu
+function pixCount(g){ return g.reduce((s,r)=>s+r.filter(v=>v).length, 0); }
+const chOf = cp => cp>=0x21 ? String.fromCodePoint(cp) : '';
+const dispCh = cp => (cp>=0x21 && cp<0xE000) ? String.fromCodePoint(cp) : '';
+
+// ---- undo / redo ----
+const MAX_HIST=80;
+let history=[], histIdx=-1, savedIdx=-1;
+
+function commit(){
+  history = history.slice(0, histIdx+1);
+  history.push(grid.map(r=>[...r]));
+  if(history.length > MAX_HIST){ history.shift(); savedIdx--; } else histIdx++;
+  savedIdx = Math.min(savedIdx, histIdx); // clamp if we truncated redo tail
+  updateHistBtns();
+}
+function undo(){
+  if(histIdx<=0) return;
+  histIdx--;
+  grid=history[histIdx].map(r=>[...r]);
+  setDirty(histIdx!==savedIdx); paintGrid(); renderPreview(); updateHistBtns();
+}
+function redo(){
+  if(histIdx>=history.length-1) return;
+  histIdx++;
+  grid=history[histIdx].map(r=>[...r]);
+  setDirty(histIdx!==savedIdx); paintGrid(); renderPreview(); updateHistBtns();
+}
+function updateHistBtns(){
+  document.getElementById('undo-btn').disabled = histIdx<=0;
+  document.getElementById('redo-btn').disabled = histIdx>=history.length-1;
+}
+
+// ---- transforms ----
+// 90° CW/CCW use scale-normalized sampling to fill the full 8×16 canvas.
+const XF = {
+  shiftUp:    g => { const n=blank(); for(let r=0;r<H-1;r++) n[r]=[...g[r+1]]; return n; },
+  shiftDown:  g => { const n=blank(); for(let r=1;r<H;r++)   n[r]=[...g[r-1]]; return n; },
+  shiftLeft:  g => g.map(r => { const n=Array(W).fill(false); for(let c=0;c<W-1;c++) n[c]=r[c+1]; return n; }),
+  shiftRight: g => g.map(r => { const n=Array(W).fill(false); for(let c=1;c<W;c++)   n[c]=r[c-1]; return n; }),
+  flipH:   g => g.map(r => [...r].reverse()),
+  flipV:   g => [...g].reverse().map(r=>[...r]),
+  rot180:  g => [...g].reverse().map(r=>[...r].reverse()),
+  rotCW:   g => {
+    const n=blank();
+    for(let r=0;r<H;r++) for(let c=0;c<W;c++){
+      const sr=Math.round((H-1) - c*(H-1)/(W-1));
+      const sc=Math.round(r*(W-1)/(H-1));
+      n[r][c]=g[sr][sc];
+    }
+    return n;
+  },
+  rotCCW:  g => {
+    const n=blank();
+    for(let r=0;r<H;r++) for(let c=0;c<W;c++){
+      const sr=Math.round(c*(H-1)/(W-1));
+      const sc=Math.round((W-1) - r*(W-1)/(H-1));
+      n[r][c]=g[sr][sc];
+    }
+    return n;
+  },
+  transpose: g => {
+    const n=blank();
+    for(let r=0;r<H;r++) for(let c=0;c<W;c++){
+      const sr=Math.round(c*(H-1)/(W-1));
+      const sc=Math.round(r*(W-1)/(H-1));
+      n[r][c]=g[sr][sc];
+    }
+    return n;
+  },
+  invert: g => g.map(r=>r.map(v=>!v)),
+};
+
+function doTransform(key){
+  if(!cur) return;
+  grid=XF[key](grid);
+  commit(); setDirty(true); paintGrid(); renderPreview();
+}
 
 // ---- canvas drawing ----
 function drawRows(canvas, rows, scale){
@@ -197,24 +336,27 @@ function buildGrid(){
 }
 
 // ---- painting ----
-let painting=false, paintVal=true;
+let painting=false, paintVal=true, strokeChanged=false;
 gridEl.addEventListener('contextmenu', e=>e.preventDefault());
 gridEl.addEventListener('mousedown', e=>{
   const px=e.target.closest('.px'); if(!px) return;
   e.preventDefault();
-  painting=true; paintVal=(e.button===0); // left draws, anything else erases
+  painting=true; paintVal=(e.button===0); strokeChanged=false;
   apply(px);
 });
 gridEl.addEventListener('mouseover', e=>{
   if(!painting) return;
   const px=e.target.closest('.px'); if(px) apply(px);
 });
-window.addEventListener('mouseup', ()=>painting=false);
+window.addEventListener('mouseup', ()=>{
+  if(painting && strokeChanged) commit();
+  painting=false; strokeChanged=false;
+});
 function apply(px){
   const r=+px.dataset.r, c=+px.dataset.c;
   if(grid[r][c]===paintVal) return;
   grid[r][c]=paintVal; px.classList.toggle('on', paintVal);
-  setDirty(true); renderPreview();
+  strokeChanged=true; setDirty(true); renderPreview();
 }
 function paintGrid(){
   for(let r=0;r<H;r++) for(let c=0;c<W;c++) cells[r][c].classList.toggle('on', grid[r][c]);
@@ -223,7 +365,9 @@ function paintGrid(){
 // ---- select / render ----
 function selectGlyph(cp){
   cur=byCp.get(cp); if(!cur) return;
-  grid=rowsToGrid(cur.rows); setDirty(false); paintGrid(); renderTitle(); renderPreview();
+  grid=rowsToGrid(cur.rows);
+  history=[grid.map(r=>[...r])]; histIdx=0; savedIdx=0;
+  setDirty(false); updateHistBtns(); paintGrid(); renderTitle(); renderPreview();
   document.querySelectorAll('.gi').forEach(g=>g.classList.toggle('sel', +g.dataset.cp===cp));
   if(refOn) renderRef();
 }
@@ -232,30 +376,42 @@ function renderTitle(){
   document.getElementById('t-cp').textContent = 'U+'+cur.cp.toString(16).toUpperCase().padStart(4,'0');
   document.getElementById('t-lab').textContent = cur.label ? (cur.src==='icons' ? cur.label : '/* '+cur.label+' */') : '';
 }
+function ctxStr(){
+  const v=document.getElementById('ctx-input').value;
+  if(v) return v;
+  const ch=chOf(cur.cp)||' ';
+  return 'Il1|¦j '+ch+' n'+ch+'o';
+}
 function renderPreview(){
   drawRows(document.getElementById('pv1'), gridToRows(grid), 10);
-  drawText(document.getElementById('pv2'), 'Il1|¦j '+(chOf(cur.cp)||' ')+' n'+(chOf(cur.cp)||' ')+'o', 3);
-  if(refOn && cur) drawRows(document.getElementById('ref-tess'), gridToRows(grid), 6); // live compare
+  drawText(document.getElementById('pv2'), ctxStr(), 3);
+  document.getElementById('pxinfo').textContent = pixCount(grid)+' px';
+  if(refOn && cur) drawRows(document.getElementById('ref-tess'), gridToRows(grid), 6);
 }
 function setDirty(v){ dirty=v; document.getElementById('dirty').style.visibility=v?'visible':'hidden'; }
 
 // ---- glyph list ----
+function visibleGlyphs(filter){
+  const raw=(filter??document.getElementById('search').value), f=raw.trim().toLowerCase();
+  return GLYPHS.filter(g=>{
+    if(scope!=='all' && g.src!==scope) return false;
+    if(!f) return true;
+    return chOf(g.cp)===raw.trim() || g.cp.toString(16).includes(f) || g.label.toLowerCase().includes(f);
+  });
+}
 function renderList(filter=''){
   const list=document.getElementById('list'); list.innerHTML='';
-  const f=filter.trim().toLowerCase();
-  let n=0;
-  for(const g of GLYPHS){
-    if(scope!=='all' && g.src!==scope) continue;
-    if(f && !(chOf(g.cp)===filter.trim() || g.cp.toString(16).includes(f) || g.label.toLowerCase().includes(f))) continue;
+  const glyphs=visibleGlyphs(filter);
+  for(const g of glyphs){
     const ch=dispCh(g.cp), hex=g.cp.toString(16);
     const gi=el('div','gi'); gi.dataset.cp=g.cp; gi.title=(g.label?g.label+' · ':'')+'0x'+hex;
     const cv=document.createElement('canvas'); drawRows(cv, g.rows, 3); gi.appendChild(cv);
     gi.appendChild(el('div','cp', hex+(ch?' '+ch:'')));
     gi.addEventListener('click', ()=>selectGlyph(g.cp));
     if(cur && g.cp===cur.cp) gi.classList.add('sel');
-    list.appendChild(gi); n++;
+    list.appendChild(gi);
   }
-  document.getElementById('count').textContent = n+' glyph'+(n===1?'':'s');
+  document.getElementById('count').textContent = glyphs.length+' glyph'+(glyphs.length===1?'':'s');
 }
 document.getElementById('search').addEventListener('input', e=>renderList(e.target.value));
 document.getElementById('scope').addEventListener('click', e=>{
@@ -264,6 +420,16 @@ document.getElementById('scope').addEventListener('click', e=>{
   document.querySelectorAll('#scope button').forEach(x=>x.classList.toggle('on', x===b));
   renderList(document.getElementById('search').value);
 });
+
+// ---- navigate prev/next ----
+function navigate(delta){
+  if(!cur) return;
+  const list=visibleGlyphs().sort((a,b)=>a.cp-b.cp);
+  const idx=list.findIndex(g=>g.cp===cur.cp);
+  const next=list[idx+delta]; if(!next) return;
+  selectGlyph(next.cp);
+  document.querySelector(`.gi[data-cp="${next.cp}"]`)?.scrollIntoView({block:'nearest'});
+}
 
 // ---- actions ----
 async function save(){
@@ -274,19 +440,94 @@ async function save(){
       body:JSON.stringify({src:cur.src, cp:cur.cp, rows}) });
     const j=await res.json();
     if(!res.ok || j.error) throw new Error(j.error || ('HTTP '+res.status));
-    cur.rows=rows; setDirty(false);
+    cur.rows=rows; savedIdx=histIdx; setDirty(false);
     const gi=[...document.querySelectorAll('.gi')].find(g=>+g.dataset.cp===cur.cp);
     if(gi) drawRows(gi.querySelector('canvas'), rows, 3);
     st.textContent='saved ✓  '+cur.src+'.js  '+new Date().toLocaleTimeString();
   }catch(err){ st.textContent='✗ save failed: '+err.message; }
 }
 document.getElementById('save').addEventListener('click', save);
-document.getElementById('revert').addEventListener('click', ()=>{ grid=rowsToGrid(cur.rows); setDirty(false); paintGrid(); renderPreview(); });
-document.getElementById('clear').addEventListener('click', ()=>{ grid=blank(); setDirty(true); paintGrid(); renderPreview(); });
-window.addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey) && e.key==='s'){ e.preventDefault(); save(); } });
+document.getElementById('revert').addEventListener('click', ()=>{
+  grid=rowsToGrid(cur.rows);
+  history=[grid.map(r=>[...r])]; histIdx=0; savedIdx=0;
+  setDirty(false); updateHistBtns(); paintGrid(); renderPreview();
+});
+document.getElementById('clear').addEventListener('click', ()=>{
+  grid=blank(); commit(); setDirty(true); paintGrid(); renderPreview();
+});
+document.getElementById('copy-btn').addEventListener('click', ()=>{
+  clipboard=grid.map(r=>[...r]);
+  document.getElementById('paste-btn').disabled=false;
+  document.getElementById('status').textContent='copied to clipboard';
+});
+document.getElementById('paste-btn').addEventListener('click', ()=>{
+  if(!clipboard) return;
+  grid=clipboard.map(r=>[...r]); commit(); setDirty(true); paintGrid(); renderPreview();
+});
+
+// ---- tools bar ----
+document.getElementById('tools').addEventListener('click', e=>{
+  const btn=e.target.closest('[data-xf]'); if(!btn) return;
+  doTransform(btn.dataset.xf);
+});
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('redo-btn').addEventListener('click', redo);
+
+// ---- zoom ----
+const ZOOM_STEPS=[18,22,26,30,36];
+let zoomIdx=2;
+function applyZoom(){
+  document.documentElement.style.setProperty('--px', ZOOM_STEPS[zoomIdx]+'px');
+}
+document.getElementById('zoom-out').addEventListener('click', ()=>{ if(zoomIdx>0){ zoomIdx--; applyZoom(); } });
+document.getElementById('zoom-in').addEventListener('click',  ()=>{ if(zoomIdx<ZOOM_STEPS.length-1){ zoomIdx++; applyZoom(); } });
+
+// ---- context preview input ----
+document.getElementById('ctx-input').addEventListener('input', ()=>renderPreview());
+
+// ---- keyboard ----
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+window.addEventListener('keydown', e=>{
+  const inInput=/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||'');
+
+  if((e.metaKey||e.ctrlKey) && e.key==='s'){ e.preventDefault(); save(); return; }
+  if((e.metaKey||e.ctrlKey) && e.key==='z'){ e.preventDefault(); undo(); return; }
+  if((e.metaKey||e.ctrlKey) && (e.key==='y'||(e.shiftKey&&e.key==='Z'))){ e.preventDefault(); redo(); return; }
+  if((e.metaKey||e.ctrlKey) && e.key==='c' && !inInput){
+    clipboard=grid.map(r=>[...r]);
+    document.getElementById('paste-btn').disabled=false;
+    document.getElementById('status').textContent='copied'; return;
+  }
+  if((e.metaKey||e.ctrlKey) && e.key==='v' && !inInput){
+    if(!clipboard) return;
+    grid=clipboard.map(r=>[...r]); commit(); setDirty(true); paintGrid(); renderPreview(); return;
+  }
+
+  if(inInput) return;
+
+  // alt+arrow = shift pixels
+  if(e.altKey){
+    const map={ArrowLeft:'shiftLeft',ArrowRight:'shiftRight',ArrowUp:'shiftUp',ArrowDown:'shiftDown'};
+    if(map[e.key]){ e.preventDefault(); doTransform(map[e.key]); return; }
+  }
+
+  // single-key shortcuts (no modifier)
+  if(!e.metaKey && !e.ctrlKey && !e.altKey){
+    switch(e.key){
+      case 'h': doTransform('flipH'); return;
+      case 'v': doTransform('flipV'); return;
+      case 'i': doTransform('invert'); return;
+      case 't': doTransform('transpose'); return;
+      case 'r': toggleRef(); return;
+      case '[': navigate(-1); return;
+      case ']': navigate(1); return;
+      case '-': if(zoomIdx>0){ zoomIdx--; applyZoom(); } return;
+      case '=': if(zoomIdx<ZOOM_STEPS.length-1){ zoomIdx++; applyZoom(); } return;
+    }
+  }
+});
 
 // ---- nerd-font reference pane ----
-const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function toggleRef(on){
   refOn = on==null ? !refOn : !!on;
   document.body.classList.toggle('refon', refOn);
@@ -301,14 +542,14 @@ function renderRef(){
     'U+'+cur.cp.toString(16).toUpperCase().padStart(4,'0') +
     (cur.label ? ' · <b>'+esc(cur.label)+'</b>' : '') +
     (cur.cp<0xE000 ? ' <span class="nolatin">· symbols-only: no Latin ref</span>' : '');
-  refStart = Math.max(0, cur.cp & ~0x0f); refEnd = refStart + 0x5f; // 16-aligned block window
+  refStart = Math.max(0, cur.cp & ~0x0f); refEnd = refStart + 0x5f;
   document.getElementById('ref-range').value = refStart.toString(16)+'-'+refEnd.toString(16);
   renderSpecimen();
 }
 function renderSpecimen(){
   const g=document.getElementById('ref-grid'); g.innerHTML='';
   let s=refStart, e=refEnd; if(e<s) [s,e]=[e,s];
-  e=Math.min(e, s+0xff); // cap at 256 cells
+  e=Math.min(e, s+0xff);
   for(let cp=s; cp<=e; cp++){
     const have=byCp.has(cp);
     const sp=el('div','sp'+(have?' have':'')+(cur&&cp===cur.cp?' cur':''));
@@ -324,11 +565,7 @@ document.getElementById('ref-range').addEventListener('input', e=>{
   const m=e.target.value.match(/([0-9a-fA-F]{1,6})\s*[-–]\s*([0-9a-fA-F]{1,6})/);
   if(m){ refStart=parseInt(m[1],16); refEnd=parseInt(m[2],16); renderSpecimen(); }
 });
-window.addEventListener('keydown', e=>{
-  if(e.key==='r' && !e.metaKey && !e.ctrlKey && !e.altKey
-     && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||'')){ e.preventDefault(); toggleRef(); }
-});
-(async function(){ // report resolved font / graceful empty state
+(async function(){
   try{
     const info=await (await fetch('/api/nerdfont/info')).json();
     document.getElementById('ref-fn').textContent = info.found ? info.name : 'not found';
