@@ -16,57 +16,55 @@ function useTweaks(defaults) {
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "weight": 0,
   "rounding": 0,
-  "mode": "noir",
+  "mode": "default",
   "specimenPx": 2,
   "specimenText": "the quick brown fox\njumps over the lazy dog\nTHE QUICK BROWN FOX\nJUMPS OVER THE LAZY DOG\n0123456789 !@#$%^&*()\nif x != 0 -> result <= max\nasync fn(a, b) => a + b ~~ b"
 }/*EDITMODE-END*/;
 
-// ─── Color tokens ────────────────────────────────────────────────────────────
+// ─── Color tokens — Base16 colorschemes ──────────────────────────────────────
+// Each palette maps base16 roles: bg=base00 panel=base01 rule=base02 muted=base03
+// ink=base05 accent=base0D; powerline derives from base08/0A/0B/0E
 const PALETTES = {
-  noir: {
-    bg: '#181818',
-    panel: '#282828',
-    ink: '#d8d8d8',
-    muted: '#585858',
-    rule: '#383838',
-    grid: 'rgba(216,216,216,0.06)',
-    baseline: 'rgba(124,175,194,0.45)',
-    accent: '#7cafc2',
-    accentSoft: '#383838'
-  },
-  paper: {
-    bg: '#f4efe4',
-    panel: '#ebe4d3',
-    ink: '#1f1d18',
-    muted: '#8a8170',
-    rule: '#cdc4ad',
-    grid: 'rgba(31,29,24,0.10)',
-    baseline: 'rgba(184,70,46,0.55)',
-    accent: '#b8462e',
-    accentSoft: '#dfa089'
-  },
-  amber: {
-    bg: '#16140d',
-    panel: '#1e1a10',
-    ink: '#f0c267',
-    muted: '#7c6a3f',
-    rule: '#3a311c',
-    grid: 'rgba(240,194,103,0.08)',
-    baseline: 'rgba(240,194,103,0.45)',
-    accent: '#f8d98a',
-    accentSoft: '#5a4a20'
-  },
-  phosphor: {
-    bg: '#0a120d',
-    panel: '#0f1a13',
-    ink: '#9be8a6',
-    muted: '#4a7a55',
-    rule: '#1f2e23',
-    grid: 'rgba(155,232,166,0.08)',
-    baseline: 'rgba(155,232,166,0.40)',
-    accent: '#caffd6',
-    accentSoft: '#2e4e36'
-  }
+  default: { label: 'Default Dark',
+    bg:'#181818', panel:'#282828', rule:'#383838', muted:'#585858', ink:'#d8d8d8',
+    grid:'rgba(216,216,216,0.06)', baseline:'rgba(124,175,194,0.45)',
+    accent:'#7cafc2', accentSoft:'#383838' },
+  monokai: { label: 'Monokai',
+    bg:'#272822', panel:'#383830', rule:'#49483e', muted:'#75715e', ink:'#f8f8f2',
+    grid:'rgba(248,248,242,0.06)', baseline:'rgba(102,217,232,0.45)',
+    accent:'#66d9e8', accentSoft:'#49483e' },
+  solarized: { label: 'Solarized Dark',
+    bg:'#002b36', panel:'#073642', rule:'#586e75', muted:'#657b83', ink:'#93a1a1',
+    grid:'rgba(147,161,161,0.08)', baseline:'rgba(38,139,210,0.45)',
+    accent:'#268bd2', accentSoft:'#073642' },
+  'solarized-l': { label: 'Solarized Light',
+    bg:'#fdf6e3', panel:'#eee8d5', rule:'#93a1a1', muted:'#839496', ink:'#586e75',
+    grid:'rgba(88,110,117,0.12)', baseline:'rgba(38,139,210,0.45)',
+    accent:'#268bd2', accentSoft:'#eee8d5' },
+  nord: { label: 'Nord',
+    bg:'#2e3440', panel:'#3b4252', rule:'#434c5e', muted:'#4c566a', ink:'#e5e9f0',
+    grid:'rgba(229,233,240,0.06)', baseline:'rgba(129,161,193,0.45)',
+    accent:'#81a1c1', accentSoft:'#434c5e' },
+  gruvbox: { label: 'Gruvbox Dark',
+    bg:'#282828', panel:'#3c3836', rule:'#504945', muted:'#7c6f64', ink:'#d5c4a1',
+    grid:'rgba(213,196,161,0.06)', baseline:'rgba(69,133,136,0.45)',
+    accent:'#458588', accentSoft:'#504945' },
+  dracula: { label: 'Dracula',
+    bg:'#282a36', panel:'#343746', rule:'#44475a', muted:'#6272a4', ink:'#f8f8f2',
+    grid:'rgba(248,248,242,0.06)', baseline:'rgba(189,147,249,0.45)',
+    accent:'#bd93f9', accentSoft:'#44475a' },
+  'one-dark': { label: 'One Dark',
+    bg:'#282c34', panel:'#353b45', rule:'#3e4451', muted:'#545862', ink:'#abb2bf',
+    grid:'rgba(171,178,191,0.06)', baseline:'rgba(97,175,239,0.45)',
+    accent:'#61afef', accentSoft:'#3e4451' },
+  tomorrow: { label: 'Tomorrow Night',
+    bg:'#1d1f21', panel:'#282a2e', rule:'#373b41', muted:'#969896', ink:'#c5c8c6',
+    grid:'rgba(197,200,198,0.06)', baseline:'rgba(129,162,190,0.45)',
+    accent:'#81a2be', accentSoft:'#373b41' },
+  ocean: { label: 'Ocean',
+    bg:'#2b303b', panel:'#343d46', rule:'#4f5b66', muted:'#65737e', ink:'#c0c5ce',
+    grid:'rgba(192,197,206,0.06)', baseline:'rgba(143,161,179,0.45)',
+    accent:'#8fa1b3', accentSoft:'#4f5b66' },
 };
 
 // ─── Tab bar ─────────────────────────────────────────────────────────────────
@@ -85,9 +83,9 @@ function TabBar({ tabs, active, onSelect }) {
 // ─── Section nav + inline controls ───────────────────────────────────────────
 function SectionNav({ pal, t, setTweak }) {
   const links = [
-    ['specimen','Specimen'],['atlas','Atlas'],['box','Box drawing'],
+    ['specimen','Specimen'],['specs','System'],['atlas','Atlas'],['box','Box drawing'],
     ['math','Math'],['icons','Icons'],['nerd','Nerd Fonts'],
-    ['specs','System'],['lig','Ligatures'],
+    ['lig','Ligatures'],
   ];
   return (
     <nav className="section-nav" style={{ background: pal.bg, borderBottomColor: pal.rule }}>
@@ -97,32 +95,13 @@ function SectionNav({ pal, t, setTweak }) {
         ))}
       </div>
       <div className="nav-controls">
-        <div className="nav-ctrl-grp">
-          {[{v:0,l:'reg'},{v:1,l:'bold'},{v:2,l:'xbold'}].map(({v,l}) => (
-            <button key={v} className={'nav-ctrl-btn' + (t.weight===v ? ' on' : '')}
-              onClick={() => setTweak('weight', v)}>{l}</button>
+        <select className="nav-scheme-select"
+          value={t.mode} onChange={e => setTweak('mode', e.target.value)}
+          style={{ color: pal.ink, borderColor: pal.rule, background: pal.panel }}>
+          {Object.entries(PALETTES).map(([key, p]) => (
+            <option key={key} value={key}>{p.label}</option>
           ))}
-        </div>
-        <div className="nav-sep" />
-        <div className="nav-ctrl-grp">
-          <span className="nav-ctrl-lbl">round</span>
-          <input type="range" className="nav-ctrl-range" min="0" max="1" step="0.1"
-            value={t.rounding} onChange={e => setTweak('rounding', +e.target.value)} />
-          <span className="nav-ctrl-val">{t.rounding}</span>
-        </div>
-        <div className="nav-sep" />
-        <div className="nav-ctrl-grp">
-          {Object.keys(PALETTES).map(mode => (
-            <button key={mode} className="nav-mode" title={mode}
-              style={{
-                background: PALETTES[mode].accent,
-                boxShadow: t.mode===mode
-                  ? `0 0 0 1.5px ${pal.bg}, 0 0 0 3px ${pal.accent}`
-                  : 'none'
-              }}
-              onClick={() => setTweak('mode', mode)} />
-          ))}
-        </div>
+        </select>
       </div>
     </nav>
   );
@@ -287,7 +266,7 @@ function Atlas({ pal, weight, rounding, alts }) {
   const [tab, setTab] = useState(0);
 
   return (
-    <Section id="atlas" num="02" title="Atlas" accent={pal.accent}
+    <Section id="atlas" num="03" title="Atlas" accent={pal.accent}
       sub="Every glyph on its 8×16 grid. Rounding clips outside corners; bold dilates one pixel.">
       <TabBar tabs={groups.map(g => `${g.title} · ${g.codepoints.length}`)} active={tab} onSelect={setTab} />
       <AtlasGroup {...groups[tab]} pal={pal} weight={weight} rounding={rounding} alts={alts} />
@@ -318,7 +297,7 @@ function BoxDemo({ pal, weight, rounding }) {
   ].join('\n');
 
   return (
-    <Section id="box" num="03" title="Box drawing" accent={pal.accent}
+    <Section id="box" num="04" title="Box drawing" accent={pal.accent}
       sub="The TUI test. U+2500–U+257F generated from a 4-arm encoding (left, right, up, down × light / heavy / double). Block elements (U+2580–U+259F) drive shading.">
       <div className="box-grid">
         <div className="box-panel" style={{ background: pal.panel, borderColor: pal.rule }}>
@@ -343,7 +322,7 @@ function MathDemo({ pal, weight, rounding, ligatures, alts }) {
   const e = '∩ ∪ ∈ ∃ ∀ ∏ × ÷ ≤ ≥';
 
   return (
-    <Section id="math" num="04" title="Math & arrows" accent={pal.accent}
+    <Section id="math" num="05" title="Math & arrows" accent={pal.accent}
       sub="A curated selection covering common operators, set notation, and arrow forms. Drawn to the same 8×16 cell — math reads at terminal pitch.">
       <div className="math-stack" style={{ background: pal.panel, borderColor: pal.rule }}>
         {[a, b, c, d, e].map((s, i) => (
@@ -445,7 +424,7 @@ function NerdRoadmap({ pal }) {
   };
 
   return (
-    <Section id="nerd" num="06" title="Nerd Fonts coverage" accent={pal.accent}
+    <Section id="nerd" num="07" title="Nerd Fonts coverage" accent={pal.accent}
       sub={`${total.toLocaleString()} codepoints across ${NERD_CATEGORIES.length} sources — one cell per codepoint, lit when drawn. Terminal essentials first.`}>
       <div className="cov-summary" style={{ background: pal.panel, borderColor: pal.rule }}>
         <div className="cov-summary-l">
@@ -514,43 +493,18 @@ function NerdRoadmap({ pal }) {
 }
 
 // ─── Powerline & icons ───────────────────────────────────────────────────────
+// Powerline segment colors keyed to match PALETTES; fg chosen for contrast on each bg
 const POWERLINE_PALETTES = {
-  noir: {
-    user:   { bg: '#ba8baf', fg: '#181818' },
-    path:   { bg: '#7cafc2', fg: '#181818' },
-    branch: { bg: '#ab4642', fg: '#f8f8f8' },
-    status: { bg: '#383838', fg: '#d8d8d8' },
-    ok:     { bg: '#a1b56c', fg: '#181818' },
-    err:    { bg: '#ab4642', fg: '#f8f8f8' },
-    warn:   { bg: '#f7ca88', fg: '#181818' }
-  },
-  paper: {
-    user:   { bg: '#2a3a6e', fg: '#f4efe4' },
-    path:   { bg: '#6b8db0', fg: '#1f1d18' },
-    branch: { bg: '#b8462e', fg: '#f4efe4' },
-    status: { bg: '#1f1d18', fg: '#f0c267' },
-    ok:     { bg: '#3e7a4c', fg: '#f4efe4' },
-    err:    { bg: '#a0331b', fg: '#f4efe4' },
-    warn:   { bg: '#d4a64b', fg: '#1f1d18' }
-  },
-  amber: {
-    user:   { bg: '#3a311c', fg: '#f0c267' },
-    path:   { bg: '#5a4a20', fg: '#f8d98a' },
-    branch: { bg: '#9a7530', fg: '#16140d' },
-    status: { bg: '#f0c267', fg: '#16140d' },
-    ok:     { bg: '#7c6a3f', fg: '#16140d' },
-    err:    { bg: '#c04a20', fg: '#f8d98a' },
-    warn:   { bg: '#f8d98a', fg: '#3a311c' }
-  },
-  phosphor: {
-    user:   { bg: '#1f2e23', fg: '#9be8a6' },
-    path:   { bg: '#2e4e36', fg: '#caffd6' },
-    branch: { bg: '#4a7a55', fg: '#0a120d' },
-    status: { bg: '#caffd6', fg: '#0a120d' },
-    ok:     { bg: '#6aa872', fg: '#0a120d' },
-    err:    { bg: '#a64a4a', fg: '#fff0e8' },
-    warn:   { bg: '#cab46a', fg: '#0a120d' }
-  }
+  default:     { user:{bg:'#ba8baf',fg:'#181818'}, path:{bg:'#7cafc2',fg:'#181818'}, branch:{bg:'#ab4642',fg:'#f8f8f8'}, status:{bg:'#383838',fg:'#d8d8d8'}, ok:{bg:'#a1b56c',fg:'#181818'}, err:{bg:'#ab4642',fg:'#f8f8f8'}, warn:{bg:'#f7ca88',fg:'#181818'} },
+  monokai:     { user:{bg:'#ae81ff',fg:'#272822'}, path:{bg:'#66d9e8',fg:'#272822'}, branch:{bg:'#f92672',fg:'#f9f8f5'}, status:{bg:'#49483e',fg:'#f8f8f2'}, ok:{bg:'#a6e22e',fg:'#272822'}, err:{bg:'#f92672',fg:'#f9f8f5'}, warn:{bg:'#f4bf75',fg:'#272822'} },
+  solarized:   { user:{bg:'#6c71c4',fg:'#fdf6e3'}, path:{bg:'#268bd2',fg:'#fdf6e3'}, branch:{bg:'#dc322f',fg:'#fdf6e3'}, status:{bg:'#586e75',fg:'#93a1a1'}, ok:{bg:'#859900',fg:'#fdf6e3'}, err:{bg:'#dc322f',fg:'#fdf6e3'}, warn:{bg:'#b58900',fg:'#002b36'} },
+  'solarized-l':{ user:{bg:'#6c71c4',fg:'#fdf6e3'}, path:{bg:'#268bd2',fg:'#fdf6e3'}, branch:{bg:'#dc322f',fg:'#fdf6e3'}, status:{bg:'#93a1a1',fg:'#002b36'}, ok:{bg:'#859900',fg:'#fdf6e3'}, err:{bg:'#dc322f',fg:'#fdf6e3'}, warn:{bg:'#b58900',fg:'#002b36'} },
+  nord:        { user:{bg:'#b48ead',fg:'#2e3440'}, path:{bg:'#81a1c1',fg:'#2e3440'}, branch:{bg:'#bf616a',fg:'#eceff4'}, status:{bg:'#434c5e',fg:'#e5e9f0'}, ok:{bg:'#a3be8c',fg:'#2e3440'}, err:{bg:'#bf616a',fg:'#eceff4'}, warn:{bg:'#ebcb8b',fg:'#2e3440'} },
+  gruvbox:     { user:{bg:'#b16286',fg:'#282828'}, path:{bg:'#458588',fg:'#fbf1c7'}, branch:{bg:'#cc241d',fg:'#fbf1c7'}, status:{bg:'#504945',fg:'#d5c4a1'}, ok:{bg:'#98971a',fg:'#fbf1c7'}, err:{bg:'#cc241d',fg:'#fbf1c7'}, warn:{bg:'#d79921',fg:'#282828'} },
+  dracula:     { user:{bg:'#ff79c6',fg:'#282a36'}, path:{bg:'#8be9fd',fg:'#282a36'}, branch:{bg:'#ff5555',fg:'#f8f8f2'}, status:{bg:'#44475a',fg:'#f8f8f2'}, ok:{bg:'#50fa7b',fg:'#282a36'}, err:{bg:'#ff5555',fg:'#f8f8f2'}, warn:{bg:'#f1fa8c',fg:'#282a36'} },
+  'one-dark':  { user:{bg:'#c678dd',fg:'#282c34'}, path:{bg:'#61afef',fg:'#282c34'}, branch:{bg:'#e06c75',fg:'#c8ccd4'}, status:{bg:'#3e4451',fg:'#abb2bf'}, ok:{bg:'#98c379',fg:'#282c34'}, err:{bg:'#e06c75',fg:'#c8ccd4'}, warn:{bg:'#e5c07b',fg:'#282c34'} },
+  tomorrow:    { user:{bg:'#b294bb',fg:'#1d1f21'}, path:{bg:'#81a2be',fg:'#1d1f21'}, branch:{bg:'#cc6666',fg:'#ffffff'}, status:{bg:'#373b41',fg:'#c5c8c6'}, ok:{bg:'#b5bd68',fg:'#1d1f21'}, err:{bg:'#cc6666',fg:'#ffffff'}, warn:{bg:'#f0c674',fg:'#1d1f21'} },
+  ocean:       { user:{bg:'#b48ead',fg:'#2b303b'}, path:{bg:'#8fa1b3',fg:'#2b303b'}, branch:{bg:'#bf616a',fg:'#eff1f5'}, status:{bg:'#4f5b66',fg:'#c0c5ce'}, ok:{bg:'#a3be8c',fg:'#2b303b'}, err:{bg:'#bf616a',fg:'#eff1f5'}, warn:{bg:'#ebcb8b',fg:'#2b303b'} },
 };
 
 function PowerlineBar({ segments, pageBg, px = 4, weight = 0, rounding = 0, capRight = true }) {
@@ -600,10 +554,16 @@ function PowerlineBar({ segments, pageBg, px = 4, weight = 0, rounding = 0, capR
 
 // ─── Starship-style prompts ──────────────────────────────────────────────────
 const STARSHIP_COLORS = {
-  noir:     { dir: '#7cafc2', branch: '#ba8baf', ok: '#a1b56c', warn: '#f7ca88', err: '#ab4642', muted: '#585858', vi: '#86c1b9', dur: '#dc9656' },
-  paper:    { dir: '#2a6fa3', branch: '#b8462e', ok: '#3e7a4c', warn: '#d4a64b', err: '#a0331b', muted: '#8a8170', vi: '#5a4ea8', dur: '#8a6f3f' },
-  amber:    { dir: '#f0c267', branch: '#f8d98a', ok: '#9ab874', warn: '#f8d98a', err: '#e07050', muted: '#7c6a3f', vi: '#c0a85a', dur: '#a89058' },
-  phosphor: { dir: '#9be8a6', branch: '#caffd6', ok: '#6aa872', warn: '#cab46a', err: '#e69090', muted: '#4a7a55', vi: '#8aa8c8', dur: '#7a9a78' }
+  default:     { dir:'#7cafc2', branch:'#ba8baf', ok:'#a1b56c', warn:'#f7ca88', err:'#ab4642', muted:'#585858', vi:'#86c1b9', dur:'#dc9656' },
+  monokai:     { dir:'#66d9e8', branch:'#ae81ff', ok:'#a6e22e', warn:'#f4bf75', err:'#f92672', muted:'#75715e', vi:'#a1efe4', dur:'#fd971f' },
+  solarized:   { dir:'#268bd2', branch:'#6c71c4', ok:'#859900', warn:'#b58900', err:'#dc322f', muted:'#657b83', vi:'#2aa198', dur:'#cb4b16' },
+  'solarized-l':{ dir:'#268bd2', branch:'#6c71c4', ok:'#859900', warn:'#b58900', err:'#dc322f', muted:'#839496', vi:'#2aa198', dur:'#cb4b16' },
+  nord:        { dir:'#81a1c1', branch:'#b48ead', ok:'#a3be8c', warn:'#ebcb8b', err:'#bf616a', muted:'#4c566a', vi:'#88c0d0', dur:'#d08770' },
+  gruvbox:     { dir:'#458588', branch:'#b16286', ok:'#98971a', warn:'#d79921', err:'#cc241d', muted:'#7c6f64', vi:'#689d6a', dur:'#d65d0e' },
+  dracula:     { dir:'#8be9fd', branch:'#ff79c6', ok:'#50fa7b', warn:'#f1fa8c', err:'#ff5555', muted:'#6272a4', vi:'#bd93f9', dur:'#ffb86c' },
+  'one-dark':  { dir:'#61afef', branch:'#c678dd', ok:'#98c379', warn:'#e5c07b', err:'#e06c75', muted:'#545862', vi:'#56b6c2', dur:'#d19a66' },
+  tomorrow:    { dir:'#81a2be', branch:'#b294bb', ok:'#b5bd68', warn:'#f0c674', err:'#cc6666', muted:'#969896', vi:'#8abeb7', dur:'#de935f' },
+  ocean:       { dir:'#8fa1b3', branch:'#b48ead', ok:'#a3be8c', warn:'#ebcb8b', err:'#bf616a', muted:'#65737e', vi:'#96b5b4', dur:'#d08770' },
 };
 
 function StarshipPiece({ text, ink, paper, px, weight, rounding }) {
@@ -621,7 +581,7 @@ function StarshipLine({ pieces, paper, px, weight, rounding }) {
 }
 
 function StarshipCard({ pal, mode, weight, rounding }) {
-  const c = STARSHIP_COLORS[mode] || STARSHIP_COLORS.paper;
+  const c = STARSHIP_COLORS[mode] || STARSHIP_COLORS.default;
   const px = 2;
   const paper = pal.panel;
 
@@ -771,7 +731,7 @@ function StarshipCard({ pal, mode, weight, rounding }) {
 }
 
 function IconsPowerline({ pal, mode, weight, rounding }) {
-  const plp = POWERLINE_PALETTES[mode] || POWERLINE_PALETTES.paper;
+  const plp = POWERLINE_PALETTES[mode] || POWERLINE_PALETTES.default;
   const ch = (cp) => String.fromCodePoint(cp);
 
   const prompts = [
@@ -835,7 +795,7 @@ function IconsPowerline({ pal, mode, weight, rounding }) {
   const [tab, setTab] = useState(0);
 
   return (
-    <Section id="icons" num="05" title="Powerline & icons" accent={pal.accent}
+    <Section id="icons" num="06" title="Powerline & icons" accent={pal.accent}
       sub="Phase-0 Nerd Fonts icons — Powerline, IEC power symbols, Pomicons, Codicons, Seti. Same 8×16 cell.">
       <TabBar tabs={['Powerline', 'Starship', 'Icon atlas']} active={tab} onSelect={setTab} />
 
@@ -992,7 +952,7 @@ function AxesGrid({ pal, rounding, weight, setTweak }) {
 
 function Specs({ pal, weight, rounding, setTweak }) {
   return (
-    <Section id="specs" num="07" title="System" accent={pal.accent}
+    <Section id="specs" num="02" title="System" accent={pal.accent}
       sub="Metrics, axes, and the rendering contract. Designed once on the bitmap grid; rendered as outlined paths so corner rounding and integer scaling fall out for free.">
       <div className="specs-grid">
         <div className="spec-card" style={{ background: pal.panel, borderColor: pal.rule }}>
@@ -1014,6 +974,11 @@ function Specs({ pal, weight, rounding, setTweak }) {
           <h3>Axes</h3>
           <p style={{ color: pal.muted }}>Two variation axes. Weight is structural (dilation). Rounding is purely cosmetic — applied at render time, never bakes pixels.</p>
           <AxesGrid pal={pal} weight={weight} rounding={rounding} setTweak={setTweak} />
+          <label className="ctrl" style={{ marginTop: 10 }}>
+            <span>Rounding <b>{rounding}</b></span>
+            <input type="range" min="0" max="1" step="0.05" value={rounding}
+              onChange={e => setTweak('rounding', +e.target.value)} />
+          </label>
           <dl className="spec-dl">
             <dt>wght</dt><dd>400 / 700 / 900</dd>
             <dt>ROND</dt><dd>0 → 100 (custom axis)</dd>
@@ -1119,7 +1084,7 @@ function Ligatures({ pal, weight, rounding, ligatures, alts }) {
 // ─── App root ────────────────────────────────────────────────────────────────
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
-  const pal = PALETTES[t.mode] || PALETTES.noir;
+  const pal = PALETTES[t.mode] || PALETTES.default;
 
   // Set CSS vars on root
   useEffect(() => {
@@ -1139,12 +1104,12 @@ function App() {
       <Specimen pal={pal} weight={t.weight} rounding={t.rounding}
         specimenPx={t.specimenPx} setTweak={setTweak} text={t.specimenText}
         ligatures alts />
+      <Specs pal={pal} weight={t.weight} rounding={t.rounding} setTweak={setTweak} />
       <Atlas pal={pal} weight={t.weight} rounding={t.rounding} alts />
       <BoxDemo pal={pal} weight={t.weight} rounding={t.rounding} />
       <MathDemo pal={pal} weight={t.weight} rounding={t.rounding} ligatures alts />
       <IconsPowerline pal={pal} mode={t.mode} weight={t.weight} rounding={t.rounding} />
       <NerdRoadmap pal={pal} />
-      <Specs pal={pal} weight={t.weight} rounding={t.rounding} setTweak={setTweak} />
       <Ligatures pal={pal} weight={t.weight} rounding={t.rounding} ligatures alts />
 
       <footer className="footer">

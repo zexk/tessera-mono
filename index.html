@@ -308,11 +308,14 @@
     min-width: 14px; text-align: right; font-variant-numeric: tabular-nums;
   }
   .nav-ctrl-range { width: 52px; accent-color: var(--accent); cursor: pointer; }
-  .nav-mode {
-    width: 13px; height: 13px; border-radius: 50%; cursor: pointer;
-    border: none; padding: 0; flex: none; transition: transform 100ms, box-shadow 100ms;
+  .nav-scheme-select {
+    font-family: var(--mono-font); font-size: 10px; padding: 3px 5px;
+    border-radius: 2px; border: 1px solid; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 6px center;
+    padding-right: 18px;
   }
-  .nav-mode:hover { transform: scale(1.25); }
   .nav-sep { width: 1px; height: 14px; background: var(--rule); margin: 0 1px; flex: none; }
   @media (max-width: 880px) { .nav-controls { display: none; } }
 
