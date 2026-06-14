@@ -6,6 +6,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "diff": "node scripts/diff-glyphs.mjs",
     "check": "node scripts/check-glyphs.mjs",
     "build:font": "npm run check && node scripts/build-font.mjs",
     "build:otb": "npm run check && for s in 1 2 3; do node scripts/build-bdf.mjs --scale $s --output dist/TesseraMono-${s}x.bdf && fonttosfnt -o dist/TesseraMono-${s}x.otb dist/TesseraMono-${s}x.bdf; done",
