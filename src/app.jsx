@@ -16,8 +16,6 @@ function useTweaks(defaults) {
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "weight": 0,
   "rounding": 0,
-  "ligatures": false,
-  "alts": false,
   "mode": "noir",
   "specimenPx": 2,
   "specimenText": "the quick brown fox\njumps over the lazy dog\nTHE QUICK BROWN FOX\nJUMPS OVER THE LAZY DOG\n0123456789 !@#$%^&*()\nif x != 0 -> result <= max\nasync fn(a, b) => a + b ~~ b"
@@ -124,13 +122,6 @@ function SectionNav({ pal, t, setTweak }) {
               }}
               onClick={() => setTweak('mode', mode)} />
           ))}
-        </div>
-        <div className="nav-sep" />
-        <div className="nav-ctrl-grp">
-          <button className={'nav-ctrl-btn' + (t.ligatures ? ' on' : '')}
-            onClick={() => setTweak('ligatures', !t.ligatures)}>lig</button>
-          <button className={'nav-ctrl-btn' + (t.alts ? ' on' : '')}
-            onClick={() => setTweak('alts', !t.alts)}>alt</button>
         </div>
       </div>
     </nav>
@@ -1147,14 +1138,14 @@ function App() {
       <Hero pal={pal} weight={t.weight} rounding={t.rounding} />
       <Specimen pal={pal} weight={t.weight} rounding={t.rounding}
         specimenPx={t.specimenPx} setTweak={setTweak} text={t.specimenText}
-        ligatures={t.ligatures} alts={t.alts} />
-      <Atlas pal={pal} weight={t.weight} rounding={t.rounding} alts={t.alts} />
+        ligatures alts />
+      <Atlas pal={pal} weight={t.weight} rounding={t.rounding} alts />
       <BoxDemo pal={pal} weight={t.weight} rounding={t.rounding} />
-      <MathDemo pal={pal} weight={t.weight} rounding={t.rounding} ligatures={t.ligatures} alts={t.alts} />
+      <MathDemo pal={pal} weight={t.weight} rounding={t.rounding} ligatures alts />
       <IconsPowerline pal={pal} mode={t.mode} weight={t.weight} rounding={t.rounding} />
       <NerdRoadmap pal={pal} />
       <Specs pal={pal} weight={t.weight} rounding={t.rounding} setTweak={setTweak} />
-      <Ligatures pal={pal} weight={t.weight} rounding={t.rounding} ligatures={t.ligatures} alts={t.alts} />
+      <Ligatures pal={pal} weight={t.weight} rounding={t.rounding} ligatures alts />
 
       <footer className="footer">
         <div>Tessera Mono · 8 × 16 · v0.1.0-draft</div>
