@@ -4023,6 +4023,9 @@
     const set = (x, y) => { if (x>=0&&x<8&&y>=0&&y<16) out[y] |= (1 << (7 - x)); };
     const [L, R, U, D] = code;
     const mx = 3, my = 7;
+    // Rounded corners (U+256D–U+2570): shift each arm 1px away from the junction,
+    // leaving the corner cell empty. The notch reads as a curve at bitmap scale.
+    const ro = (cp >= 0x256d && cp <= 0x2570) ? 1 : 0;
     const drawH = (x0, x1, y, w) => {
       if (w === 1) for (let x = x0; x <= x1; x++) set(x, y);
       else if (w === 2) for (let x = x0; x <= x1; x++) { set(x, y); set(x, y+1); }
@@ -4033,10 +4036,10 @@
       else if (w === 2) for (let y = y0; y <= y1; y++) { set(x, y); set(x+1, y); }
       else if (w === 3) for (let y = y0; y <= y1; y++) { set(x-1, y); set(x+1, y); }
     };
-    if (L) drawH(0, mx, my, L);
-    if (R) drawH(mx, 7, my, R);
-    if (U) drawV(0, my, mx, U);
-    if (D) drawV(my, 15, mx, D);
+    if (L) drawH(0, mx - ro, my, L);
+    if (R) drawH(mx + ro, 7, my, R);
+    if (U) drawV(0, my - ro, mx, U);
+    if (D) drawV(my + ro, 15, mx, D);
     return out;
   };
 
