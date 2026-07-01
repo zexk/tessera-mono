@@ -2,7 +2,7 @@
 
 A neoretro bitmap monospace font. 8×16 px cell, hand-drawn pixels, designed to carry the full Nerd Fonts glyphset.
 
-Every glyph is a bitmap at native size and renders as crisp filled paths at any integer scale — no antialiasing, no hinting, just the grid.
+Every glyph is a bitmap at native size and renders as crisp filled paths at any integer scale: no antialiasing, no hinting, just the grid.
 
 ## Status
 
@@ -52,13 +52,13 @@ nix build           # produces result/share/fonts/truetype/TesseraMono-Regular.t
 
 The TTF is a scalable vector and renders pixel-perfect at any integer
 multiple of the 8×16 cell. For terminals, fixed-size OTB bitmap strikes
-are also available — they render at their native pixel size regardless
+are also available; they render at their native pixel size regardless
 of the requested point size, so no font-size tuning is needed:
 
 ```bash
 nix build .#otb-1x   # 8×16 px cell
-nix build .#otb-2x   # 16×32 px cell — comfortable on 1080p
-nix build .#otb-3x   # 24×48 px cell — comfortable on 4k
+nix build .#otb-2x   # 16x32 px cell, comfortable on 1080p
+nix build .#otb-3x   # 24x48 px cell, comfortable on 4k
 npm run build:otb    # all three, locally (needs fonttosfnt)
 ```
 
@@ -83,7 +83,7 @@ The specimen lets you toggle weight, rounding, color themes, ligatures, and view
 
 ## Editing glyphs
 
-The recommended workflow uses the built-in browser editor — no external tools required.
+The recommended workflow uses the built-in browser editor; no external tools required.
 
 ```bash
 npm run edit:web    # start editor at http://localhost:8009
@@ -97,21 +97,21 @@ npm run build:font
 
 ### Editor features
 
-- **Sidebar** — filter by character, hex codepoint (`69`, `e0b0`), or name (`git`, `arrow`); scope buttons narrow to Latin / Icons / All
-- **Pixel grid** — left-click draws, right-click erases, drag to paint
-- **Nerd Font reference pane** — press `r` or click ⧉ NF ref to open a side-by-side reference rendered from the installed Nerd Font (auto-detected from `$NERD_FONT_DIR` or `~/.nix-profile`)
-- **Save** — `⌘/Ctrl+S` or the Save button; writes only the changed glyph block, leaves the rest of the file untouched
-- **Revert / Clear** — undo unsaved edits or wipe the glyph
+- **Sidebar**: filter by character, hex codepoint (`69`, `e0b0`), or name (`git`, `arrow`); scope buttons narrow to Latin / Icons / All
+- **Pixel grid**: left-click draws, right-click erases, drag to paint
+- **Nerd Font reference pane**: press `r` or click the NF ref button to open a side-by-side reference rendered from the installed Nerd Font (auto-detected from `$NERD_FONT_DIR` or `~/.nix-profile`)
+- **Save**: `Cmd/Ctrl+S` or the Save button; writes only the changed glyph block, leaves the rest of the file untouched
+- **Revert / Clear**: undo unsaved edits or wipe the glyph
 
 ### Which glyphs can be edited
 
 - All hand-drawn glyphs in `src/glyphs.js` (Basic Latin, Latin-1 supplement, math, arrows, dingbats)
 - All icon glyphs in `src/icons.js` (Powerline, Codicons, Octicons, Font Awesome, etc.)
 
-The following are **algorithmic** and regenerate at build time — editing them has no effect:
-- Box drawing characters (U+2500–U+257F)
-- Block elements (U+2580–U+259F)
-- Diacritic composites (À, é, ñ, etc. — built from base + accent overlay)
+The following are **algorithmic** and regenerate at build time, editing them has no effect:
+- Box drawing characters (U+2500-U+257F)
+- Block elements (U+2580-U+259F)
+- Diacritic composites (À, é, ñ, etc., built from base + accent overlay)
 
 ### BDF round-trip (legacy)
 
