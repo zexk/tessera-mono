@@ -789,7 +789,7 @@ function IconsPowerline({ pal, mode, weight, rounding }) {
   }
   const groupOrder = [
     'Powerline', 'Power', 'Pomicons', 'Codicons', 'Octicons', 'Seti',
-    'Files', 'Actions', 'Status', 'Symbols', 'Hardware', 'Places', 'People', 'Logos'
+    'Files', 'Actions', 'Status', 'Symbols', 'Hardware', 'Places', 'People', 'Logos', 'Media'
   ];
 
   const [tab, setTab] = useState(0);
