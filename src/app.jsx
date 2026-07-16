@@ -26,11 +26,11 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 // ink=base05 accent=base0D; powerline derives from base08/0A/0B/0E
 const PALETTES = {
   default: { label: 'Default Dark',
-    bg:'#181818', panel:'#282828', rule:'#383838', muted:'#585858', ink:'#d8d8d8',
+    bg:'#181818', panel:'#282828', rule:'#383838', muted:'#888888', ink:'#d8d8d8',
     grid:'rgba(216,216,216,0.06)', baseline:'rgba(124,175,194,0.45)',
     accent:'#7cafc2', accentSoft:'#383838' },
   monokai: { label: 'Monokai',
-    bg:'#272822', panel:'#383830', rule:'#49483e', muted:'#75715e', ink:'#f8f8f2',
+    bg:'#272822', panel:'#383830', rule:'#49483e', muted:'#a09c88', ink:'#f8f8f2',
     grid:'rgba(248,248,242,0.06)', baseline:'rgba(102,217,232,0.45)',
     accent:'#66d9e8', accentSoft:'#49483e' },
   solarized: { label: 'Solarized Dark',
@@ -42,19 +42,19 @@ const PALETTES = {
     grid:'rgba(88,110,117,0.12)', baseline:'rgba(38,139,210,0.45)',
     accent:'#268bd2', accentSoft:'#eee8d5' },
   nord: { label: 'Nord',
-    bg:'#2e3440', panel:'#3b4252', rule:'#434c5e', muted:'#4c566a', ink:'#e5e9f0',
+    bg:'#2e3440', panel:'#3b4252', rule:'#434c5e', muted:'#8992a3', ink:'#e5e9f0',
     grid:'rgba(229,233,240,0.06)', baseline:'rgba(129,161,193,0.45)',
     accent:'#81a1c1', accentSoft:'#434c5e' },
   gruvbox: { label: 'Gruvbox Dark',
-    bg:'#282828', panel:'#3c3836', rule:'#504945', muted:'#7c6f64', ink:'#d5c4a1',
+    bg:'#282828', panel:'#3c3836', rule:'#504945', muted:'#a89984', ink:'#d5c4a1',
     grid:'rgba(213,196,161,0.06)', baseline:'rgba(69,133,136,0.45)',
     accent:'#458588', accentSoft:'#504945' },
   dracula: { label: 'Dracula',
-    bg:'#282a36', panel:'#343746', rule:'#44475a', muted:'#6272a4', ink:'#f8f8f2',
+    bg:'#282a36', panel:'#343746', rule:'#44475a', muted:'#8f9bc8', ink:'#f8f8f2',
     grid:'rgba(248,248,242,0.06)', baseline:'rgba(189,147,249,0.45)',
     accent:'#bd93f9', accentSoft:'#44475a' },
   'one-dark': { label: 'One Dark',
-    bg:'#282c34', panel:'#353b45', rule:'#3e4451', muted:'#545862', ink:'#abb2bf',
+    bg:'#282c34', panel:'#353b45', rule:'#3e4451', muted:'#818896', ink:'#abb2bf',
     grid:'rgba(171,178,191,0.06)', baseline:'rgba(97,175,239,0.45)',
     accent:'#61afef', accentSoft:'#3e4451' },
   tomorrow: { label: 'Tomorrow Night',
@@ -62,7 +62,7 @@ const PALETTES = {
     grid:'rgba(197,200,198,0.06)', baseline:'rgba(129,162,190,0.45)',
     accent:'#81a2be', accentSoft:'#373b41' },
   ocean: { label: 'Ocean',
-    bg:'#2b303b', panel:'#343d46', rule:'#4f5b66', muted:'#65737e', ink:'#c0c5ce',
+    bg:'#2b303b', panel:'#343d46', rule:'#4f5b66', muted:'#8d99a5', ink:'#c0c5ce',
     grid:'rgba(192,197,206,0.06)', baseline:'rgba(143,161,179,0.45)',
     accent:'#8fa1b3', accentSoft:'#4f5b66' },
 };
@@ -83,7 +83,7 @@ function TabBar({ tabs, active, onSelect }) {
 // ─── Section nav + inline controls ───────────────────────────────────────────
 function SectionNav({ pal, t, setTweak }) {
   const links = [
-    ['specimen','Specimen'],['specs','System'],['atlas','Atlas'],['box','Box drawing'],
+    ['specimen','Specimen'],['proofs','Proofs'],['specs','System'],['atlas','Atlas'],['box','Box drawing'],
     ['math','Math'],['icons','Icons'],['nerd','Nerd Fonts'],
     ['lig','Ligatures'],
   ];
@@ -224,6 +224,50 @@ function Specimen({ pal, weight, rounding, specimenPx, setTweak, text, ligatures
   );
 }
 
+// ─── Recognition and real-code proofs ───────────────────────────────────────
+const CONFUSABLE_PROOFS = [
+  ['round forms', '0 O o Q  00 OO  O0 0O'],
+  ['verticals', '1 l I i |  Il1|  iIl1'],
+  ['similar shapes', '2 Z z  5 S s  6 G  8 B'],
+  ['joins', 'rn m  cl d  vv w'],
+  ['punctuation', ". , : ;  ' ` \"  - _ = ~"],
+  ['brackets', '() [] {} <>  [({<>})]'],
+];
+
+const CODE_PROOFS = [
+  ['JavaScript', "const foo_bar = value?.items[0] ?? null;\nif (foo_bar !== null) return x => x * 0x10ff;"],
+  ['Zig', 'pub fn read(io: *Io, buf: []u8) !usize {\n    return try io.read(buf[0..]);\n}'],
+  ['shell + paths', "git diff -- src/io_01.zig ../../README.md\nprintf '%s\\n' \"$PATH\" | sed -n '1,5p'"],
+  ['JSON + diff', '{\"cell\": [8, 16], \"pixelPerfect\": true}\n- old_value != 0\n+ new_value >= 0'],
+];
+
+function Proofs({ pal, weight, rounding }) {
+  const run = (label, text, px = 2) => (
+    <div className="proof-run" key={label}>
+      <span className="proof-label">{label}</span>
+      <TextRun text={text} px={px} bold={weight} rounding={rounding}
+        ink={pal.ink} paper={pal.panel} />
+    </div>
+  );
+  return (
+    <Section id="proofs" num="02" title="Recognition proofs" accent={pal.accent}
+      sub="Permanent stress tests for character ambiguity, punctuation rhythm, and dense code. Review at native 1× and at comfortable 2× before accepting glyph changes.">
+      <div className="proof-grid">
+        <div className="proof-card" style={{ background: pal.panel, borderColor: pal.rule }}>
+          <h3>Confusable characters</h3>
+          <p>Pairs that must remain distinguishable during fast reading.</p>
+          {CONFUSABLE_PROOFS.map(([label, text]) => run(label, text, 2))}
+        </div>
+        <div className="proof-card" style={{ background: pal.panel, borderColor: pal.rule }}>
+          <h3>Real code</h3>
+          <p>Language, path, number, bracket, and diff punctuation in context.</p>
+          {CODE_PROOFS.map(([label, text]) => run(label, text, 2))}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 // ─── Atlas ───────────────────────────────────────────────────────────────────
 function AtlasGroup({ title, codepoints, pal, weight, rounding, px = 6, alts = false }) {
   return (
@@ -266,7 +310,7 @@ function Atlas({ pal, weight, rounding, alts }) {
   const [tab, setTab] = useState(0);
 
   return (
-    <Section id="atlas" num="03" title="Atlas" accent={pal.accent}
+    <Section id="atlas" num="04" title="Atlas" accent={pal.accent}
       sub="Every glyph on its 8×16 grid. Rounding clips outside corners; bold dilates one pixel.">
       <TabBar tabs={groups.map(g => `${g.title} · ${g.codepoints.length}`)} active={tab} onSelect={setTab} />
       <AtlasGroup {...groups[tab]} pal={pal} weight={weight} rounding={rounding} alts={alts} />
@@ -297,7 +341,7 @@ function BoxDemo({ pal, weight, rounding }) {
   ].join('\n');
 
   return (
-    <Section id="box" num="04" title="Box drawing" accent={pal.accent}
+    <Section id="box" num="05" title="Box drawing" accent={pal.accent}
       sub="The TUI test. U+2500–U+257F generated from a 4-arm encoding (left, right, up, down × light / heavy / double). Block elements (U+2580–U+259F) drive shading.">
       <div className="box-grid">
         <div className="box-panel" style={{ background: pal.panel, borderColor: pal.rule }}>
@@ -322,7 +366,7 @@ function MathDemo({ pal, weight, rounding, ligatures, alts }) {
   const e = '∩ ∪ ∈ ∃ ∀ ∏ × ÷ ≤ ≥';
 
   return (
-    <Section id="math" num="05" title="Math & arrows" accent={pal.accent}
+    <Section id="math" num="06" title="Math & arrows" accent={pal.accent}
       sub="A curated selection covering common operators, set notation, and arrow forms. Drawn to the same 8×16 cell — math reads at terminal pitch.">
       <div className="math-stack" style={{ background: pal.panel, borderColor: pal.rule }}>
         {[a, b, c, d, e].map((s, i) => (
@@ -424,7 +468,7 @@ function NerdRoadmap({ pal }) {
   };
 
   return (
-    <Section id="nerd" num="07" title="Nerd Fonts coverage" accent={pal.accent}
+    <Section id="nerd" num="08" title="Nerd Fonts coverage" accent={pal.accent}
       sub={`${total.toLocaleString()} codepoints across ${NERD_CATEGORIES.length} sources — one cell per codepoint, lit when drawn. Terminal essentials first.`}>
       <div className="cov-summary" style={{ background: pal.panel, borderColor: pal.rule }}>
         <div className="cov-summary-l">
@@ -795,7 +839,7 @@ function IconsPowerline({ pal, mode, weight, rounding }) {
   const [tab, setTab] = useState(0);
 
   return (
-    <Section id="icons" num="06" title="Powerline & icons" accent={pal.accent}
+    <Section id="icons" num="07" title="Powerline & icons" accent={pal.accent}
       sub="Phase-0 Nerd Fonts icons — Powerline, IEC power symbols, Pomicons, Codicons, Seti. Same 8×16 cell.">
       <TabBar tabs={['Powerline', 'Starship', 'Icon atlas']} active={tab} onSelect={setTab} />
 
@@ -952,12 +996,12 @@ function AxesGrid({ pal, rounding, weight, setTweak }) {
 
 function Specs({ pal, weight, rounding, setTweak }) {
   return (
-    <Section id="specs" num="02" title="System" accent={pal.accent}
+    <Section id="specs" num="03" title="System" accent={pal.accent}
       sub="Metrics, axes, and the rendering contract. Designed once on the bitmap grid; rendered as outlined paths so corner rounding and integer scaling fall out for free.">
       <div className="specs-grid">
         <div className="spec-card" style={{ background: pal.panel, borderColor: pal.rule }}>
           <h3>Metrics</h3>
-          <p style={{ color: pal.muted }}>8 × 16 px cell. Caps occupy rows 2–10 (9 rows). x-height rows 4–10 (7 rows). Descender 2 rows. Line gap absorbs accents on the next line.</p>
+          <p style={{ color: pal.muted }}>8 × 16 px cell. Caps occupy rows 2–10 (9 rows). x-height rows 4–10 (7 rows). Descenders use 2 rows. Accent reserve lives inside the cell, keeping the default external line gap at zero.</p>
           <MetricsDiagram pal={pal} weight={weight} rounding={rounding} />
           <dl className="spec-dl">
             <dt>cell</dt><dd>8 × 16 px</dd>
@@ -965,14 +1009,14 @@ function Specs({ pal, weight, rounding, setTweak }) {
             <dt>x-height</dt><dd>7 px</dd>
             <dt>ascender</dt><dd>10 px above baseline</dd>
             <dt>descender</dt><dd>2 px below baseline</dd>
-            <dt>line gap</dt><dd>3 px (accent reserve)</dd>
+            <dt>line gap</dt><dd>0 px (reserve is inside cell)</dd>
             <dt>units/em</dt><dd>1024 (16 × 64 grid)</dd>
           </dl>
         </div>
 
         <div className="spec-card" style={{ background: pal.panel, borderColor: pal.rule }}>
-          <h3>Axes</h3>
-          <p style={{ color: pal.muted }}>Two variation axes. Weight is structural (dilation). Rounding is purely cosmetic — applied at render time, never bakes pixels.</p>
+          <h3>Renderer previews</h3>
+          <p style={{ color: pal.muted }}>The specimen can preview structural dilation and cosmetic rounding. The distributed font is currently a single Regular cut; these controls are design studies, not shipped OpenType variation axes.</p>
           <AxesGrid pal={pal} weight={weight} rounding={rounding} setTweak={setTweak} />
           <label className="ctrl" style={{ marginTop: 10 }}>
             <span>Rounding <b>{rounding}</b></span>
@@ -980,8 +1024,8 @@ function Specs({ pal, weight, rounding, setTweak }) {
               onChange={e => setTweak('rounding', +e.target.value)} />
           </label>
           <dl className="spec-dl">
-            <dt>wght</dt><dd>400 / 700 / 900</dd>
-            <dt>ROND</dt><dd>0 → 100 (custom axis)</dd>
+            <dt>weight preview</dt><dd>regular / bold / extra-bold</dd>
+            <dt>rounding preview</dt><dd>0 → 100%</dd>
           </dl>
         </div>
 
@@ -1030,7 +1074,7 @@ const LIGATURES = [
 
 function Ligatures({ pal, weight, rounding, ligatures, alts }) {
   return (
-    <Section id="lig" num="08" title="Programming ligatures" accent={pal.accent}
+    <Section id="lig" num="09" title="Programming ligatures" accent={pal.accent}
       sub="Optional, opt-in. Bitmap ligatures are tricky — every ligature still lives on the 8×16 grid, no horizontal trickery. Toggle the panel to see substitutions.">
       <div className="lig-grid">
         {LIGATURES.map((l, i) => (
@@ -1104,6 +1148,7 @@ function App() {
       <Specimen pal={pal} weight={t.weight} rounding={t.rounding}
         specimenPx={t.specimenPx} setTweak={setTweak} text={t.specimenText}
         ligatures alts />
+      <Proofs pal={pal} weight={t.weight} rounding={t.rounding} />
       <Specs pal={pal} weight={t.weight} rounding={t.rounding} setTweak={setTweak} />
       <Atlas pal={pal} weight={t.weight} rounding={t.rounding} alts />
       <BoxDemo pal={pal} weight={t.weight} rounding={t.rounding} />

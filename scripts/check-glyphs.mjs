@@ -8,6 +8,7 @@
 // Consistency warnings (exit 0):
 //   - letters/digits that miss the baseline or leak into the line gap
 //   - lowercase that misses x-height, caps/digits that miss cap height
+//   - confusable characters with identical bitmaps
 //
 // Usage: node scripts/check-glyphs.mjs
 
@@ -113,6 +114,19 @@ for (const cp of CAPS_DIGITS) {
 for (const cp of LOWER) {
   if (X_HEIGHT.has(cp) && T.GLYPHS[cp] && inkRows(T.GLYPHS[cp])[0] !== X_TOP)
     warn(cp, `top at row ${inkRows(T.GLYPHS[cp])[0]}, x-height is row ${X_TOP}`);
+}
+
+const CONFUSABLE_GROUPS = ['0OoQ', '1lIi|', '2Zz', '5Ss', '6G', '8B'];
+for (const group of CONFUSABLE_GROUPS) {
+  const cps = [...group].map(ch => ch.codePointAt(0));
+  for (let i = 0; i < cps.length; i++) {
+    for (let j = i + 1; j < cps.length; j++) {
+      const a = T.GLYPHS[cps[i]];
+      const b = T.GLYPHS[cps[j]];
+      if (a && b && a.every((row, y) => row === b[y]))
+        warn(cps[j], `identical bitmap to ${cpLabel(cps[i])} in confusable group ${group}`);
+    }
+  }
 }
 
 console.log(`alignment: ${warnings} warning(s)`);

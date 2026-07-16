@@ -40,6 +40,7 @@ tessera-mono/
 nix develop        # enter dev shell with node, otf2bdf, ripgrep
 npm run build:font  # lint glyphs + build the TTF from source
 npm run check       # lint only: row structure, duplicates, alignment
+npm run audit:glyphs # report unusually heavy or off-center icons
 ```
 
 Or build the font package directly:
@@ -80,6 +81,8 @@ npx serve .
 ```
 
 The specimen lets you toggle weight, rounding, color themes, ligatures, and view the full glyph atlas.
+It also includes permanent confusable-character and real-code proofs. Review new
+glyphs against the rules in [`docs/design-rules.md`](docs/design-rules.md).
 
 ## Editing glyphs
 
@@ -112,6 +115,22 @@ The following are **algorithmic** and regenerate at build time, editing them has
 - Box drawing characters (U+2500-U+257F)
 - Block elements (U+2580-U+259F)
 - Diacritic composites (À, é, ñ, etc., built from base + accent overlay)
+
+### Verifying Nerd Font icons
+
+The dev shell includes FreeType, Pillow, fontTools, and the pinned Nerd Fonts
+Symbols font. Render side-by-side contact sheets of the reference outlines and
+Tessera bitmaps with:
+
+```bash
+npm run verify:icons
+npm run verify:icons -- --group Media
+npm run verify:icons -- --codepoints f04b,f04c,f04d
+```
+
+The sheets are written to `screenshots/icon-verification/` by default. Use
+`npm run check:wstudio` to confirm that every icon codepoint currently used by
+the sibling `../wstudio` checkout is present.
 
 ### BDF round-trip (legacy)
 

@@ -8,6 +8,9 @@
   "scripts": {
     "diff": "node scripts/diff-glyphs.mjs",
     "check": "node scripts/check-glyphs.mjs",
+    "audit:glyphs": "node scripts/audit-glyphs.mjs",
+    "check:wstudio": "node scripts/check-wstudio-icons.mjs ../wstudio",
+    "verify:icons": "python scripts/verify-icons.py",
     "build:font": "npm run check && node scripts/build-font.mjs",
     "build:otb": "npm run check && for s in 1 2 3; do node scripts/build-bdf.mjs --scale $s --output dist/TesseraMono-${s}x.bdf && fonttosfnt -o dist/TesseraMono-${s}x.otb dist/TesseraMono-${s}x.bdf; done",
     "build:otb-multi": "npm run check && for s in 1 2 3; do node scripts/build-bdf.mjs --scale $s --output dist/TesseraMono-${s}x.bdf; done && fonttosfnt -o dist/TesseraMono.otb dist/TesseraMono-1x.bdf dist/TesseraMono-2x.bdf dist/TesseraMono-3x.bdf",

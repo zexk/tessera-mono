@@ -151,6 +151,13 @@ const font = new opentype.Font({
       bFamilyType: 2,    // panose: latin text
       bProportion: 9,    // panose: monospaced
       achVendID: 'ZEXK',
+      // Keep applications on the full 16-row cell. Accent/descender breathing
+      // room is already included; no additional typographic line gap is needed.
+      sTypoAscender: 11 * PX,
+      sTypoDescender: -5 * PX,
+      sTypoLineGap: 0,
+      usWinAscent: 11 * PX,
+      usWinDescent: 5 * PX,
     },
   },
 });

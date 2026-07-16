@@ -10,7 +10,7 @@
     --bg: #0b0b0b;
     --panel: #161616;
     --ink: #ededed;
-    --muted: #6e6e6e;
+    --muted: #858585;
     --rule: #2a2a2a;
     --accent: #f5f5f5;
     --ui-font: ui-sans-serif, -apple-system, "Helvetica Neue", system-ui, sans-serif;
@@ -58,7 +58,7 @@
     border-top: 1px solid var(--rule); padding-top: 8px;
   }
   .hero-stats b { font-size: 18px; font-weight: 600; font-feature-settings: 'tnum'; }
-  .hero-stats span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .hero-stats span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 
   /* ─── Section chrome ─────────────────────────────────────────────────── */
   .section { padding: 40px 0; border-top: 1px solid var(--rule); }
@@ -89,7 +89,7 @@
     color: var(--muted); font-family: var(--mono-font);
   }
   .ctrl b { color: var(--ink); font-weight: 600; }
-  .ctrl textarea { font-family: var(--mono-font); font-size: 12px; line-height: 1.5;
+  .ctrl textarea { font-family: var(--mono-font); font-size: 14px; line-height: 1.5;
     border: 1px solid var(--rule); padding: 10px 12px;
     background: var(--panel); color: var(--ink); resize: vertical;
     outline: none;
@@ -113,14 +113,14 @@
   .atlas-group-title { font-size: 11px; font-weight: 600; letter-spacing: .06em;
     text-transform: uppercase;
   }
-  .atlas-group-count { font-family: var(--mono-font); font-size: 10px; color: var(--muted); }
+  .atlas-group-count { font-family: var(--mono-font); font-size: 11px; color: var(--muted); }
   .atlas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
     gap: 14px;
   }
   .glyph-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .glyph-canvas { border: 1px solid var(--rule); }
   .glyph-meta { display: flex; justify-content: space-between; width: 100%;
-    font-family: var(--mono-font); font-size: 9px; color: var(--muted);
+    font-family: var(--mono-font); font-size: 11px; color: var(--muted);
   }
   .glyph-char { color: var(--ink); }
 
@@ -131,7 +131,7 @@
     display: flex; flex-direction: column; gap: 12px; overflow: auto;
   }
   .box-panel canvas { max-width: 100%; }
-  .box-panel-label { font-family: var(--mono-font); font-size: 10px;
+  .box-panel-label { font-family: var(--mono-font); font-size: 11px;
     letter-spacing: .04em; text-transform: uppercase;
   }
   .math-stack { border: 1px solid var(--rule); padding: 24px;
@@ -153,7 +153,7 @@
 
   .phase { display: flex; flex-direction: column; gap: 14px; }
   .phase-hd { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
-  .phase-pill { font-family: var(--mono-font); font-size: 10px; padding: 2px 8px;
+  .phase-pill { font-family: var(--mono-font); font-size: 11px; padding: 2px 8px;
     letter-spacing: .04em; font-weight: 600;
   }
   .phase-title { font-weight: 500; font-size: 14px; }
@@ -170,10 +170,10 @@
   .cov-card-count { font-family: var(--mono-font); font-size: 12px;
     font-variant-numeric: tabular-nums; color: var(--muted);
   }
-  .cov-card-range { font-family: var(--mono-font); font-size: 10px; }
+  .cov-card-range { font-family: var(--mono-font); font-size: 11px; }
   .cov-card-bar { height: 3px; background: var(--rule); position: relative; overflow: hidden; }
   .cov-card-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; min-width: 0; }
-  .cov-card-status { font-family: var(--mono-font); font-size: 10px;
+  .cov-card-status { font-family: var(--mono-font); font-size: 11px;
     text-transform: uppercase; letter-spacing: .04em;
   }
 
@@ -205,7 +205,7 @@
   .axes-grid { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 6px;
     align-items: stretch;
   }
-  .axes-hd, .axes-col-hd, .axes-row-hd { font-family: var(--mono-font); font-size: 10px;
+  .axes-hd, .axes-col-hd, .axes-row-hd { font-family: var(--mono-font); font-size: 11px;
     padding: 6px 4px; display: flex; align-items: center; justify-content: center;
     text-transform: uppercase; letter-spacing: .04em;
   }
@@ -226,20 +226,20 @@
     gap: 12px;
   }
   .lig-from, .lig-to { display: flex; flex-direction: column; gap: 6px; align-items: center; }
-  .lig-from span, .lig-to span { font-family: var(--mono-font); font-size: 9px;
+  .lig-from span, .lig-to span { font-family: var(--mono-font); font-size: 11px;
     color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
   }
   .lig-arrow { font-family: var(--mono-font); font-size: 16px; transition: color 200ms; }
 
   .alts { border: 1px solid var(--rule); padding: 18px; margin-top: 8px; }
   .alts-hd { display: flex; justify-content: space-between; align-items: baseline;
-    font-family: var(--mono-font); font-size: 10px; text-transform: uppercase;
+    font-family: var(--mono-font); font-size: 11px; text-transform: uppercase;
     letter-spacing: .04em; padding-bottom: 12px; border-bottom: 1px solid var(--rule);
     margin-bottom: 14px;
   }
   .alts-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   .alts-pair { display: flex; flex-direction: column; gap: 6px; align-items: center; }
-  .alts-pair span { font-family: var(--mono-font); font-size: 10px; color: var(--muted);
+  .alts-pair span { font-family: var(--mono-font); font-size: 11px; color: var(--muted);
     text-align: center;
   }
 
@@ -292,7 +292,7 @@
   }
   .nav-ctrl-grp { display: flex; align-items: center; gap: 3px; }
   .nav-ctrl-btn {
-    font-family: var(--mono-font); font-size: 9px; letter-spacing: .05em;
+    font-family: var(--mono-font); font-size: 11px; letter-spacing: .04em;
     text-transform: uppercase; padding: 3px 6px; white-space: nowrap;
     border: 1px solid var(--rule); background: transparent;
     color: var(--muted); cursor: pointer; transition: all 100ms;
@@ -300,16 +300,16 @@
   .nav-ctrl-btn:hover { color: var(--ink); border-color: var(--ink); }
   .nav-ctrl-btn.on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
   .nav-ctrl-lbl {
-    font-family: var(--mono-font); font-size: 9px; color: var(--muted);
+    font-family: var(--mono-font); font-size: 11px; color: var(--muted);
     letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
   }
   .nav-ctrl-val {
-    font-family: var(--mono-font); font-size: 9px; color: var(--muted);
+    font-family: var(--mono-font); font-size: 11px; color: var(--muted);
     min-width: 14px; text-align: right; font-variant-numeric: tabular-nums;
   }
   .nav-ctrl-range { width: 52px; accent-color: var(--accent); cursor: pointer; }
   .nav-scheme-select {
-    font-family: var(--mono-font); font-size: 10px; padding: 3px 5px;
+    font-family: var(--mono-font); font-size: 11px; padding: 3px 5px;
     border-radius: 2px; border: 1px solid; cursor: pointer;
     appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
@@ -341,6 +341,17 @@
     scrollbar-width: thin;
   }
   .h-card-row .cov-card { flex: none; width: 220px; }
+
+  /* ─── Recognition and code proofs ───────────────────────────────────── */
+  .proof-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .proof-card { border: 1px solid var(--rule); padding: 18px; overflow: auto; }
+  .proof-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; }
+  .proof-card p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+  .proof-run { margin-bottom: 14px; }
+  .proof-run:last-child { margin-bottom: 0; }
+  .proof-label { display: block; margin-bottom: 5px; color: var(--muted);
+    font-family: var(--mono-font); font-size: 11px; }
+  @media (max-width: 880px) { .proof-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
